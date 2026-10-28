@@ -13,6 +13,13 @@ from models import TestHistory
 HISTORY_FIELDS = [field.name for field in fields(TestHistory)]
 
 
+def accuracy_percent(entries: List[TestHistory]) -> int:
+    """전체 정답률(%)을 정수로 돌려준다. 시험 기록이 없으면 0이다."""
+    total = sum(entry.total for entry in entries)
+    score = sum(entry.score for entry in entries)
+    return round(score * 100 / total) if total else 0
+
+
 class TestHistoryRepository:
     """test_history.csv를 읽고 쓴다. 시험 한 세트가 한 행이다."""
 

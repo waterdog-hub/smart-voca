@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from core.test_history_repository import TestHistoryRepository  # noqa: E402
+from core.test_history_repository import TestHistoryRepository, accuracy_percent  # noqa: E402
 from core.word_service import WordService  # noqa: E402
 from models import DayPlanItem, StudyRecord, TestHistory, Word  # noqa: E402
 
@@ -122,6 +122,18 @@ class TestHistoryRepositoryTest(unittest.TestCase):
     def test_missing_file_gives_empty_list(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             self.assertEqual(TestHistoryRepository().load(Path(temp_dir) / "none.csv"), [])
+
+
+class AccuracyPercentTest(unittest.TestCase):
+    def test_empty_history_is_zero(self):
+        self.assertEqual(accuracy_percent([]), 0)
+
+    def test_percent_is_weighted_by_question_count(self):
+        entries = [
+            TestHistory(taken_at="a", test_format="multiple", test_direction="en_ko", total=10, score=10),
+            TestHistory(taken_at="b", test_format="multiple", test_direction="en_ko", total=30, score=0),
+        ]
+        self.assertEqual(accuracy_percent(entries), 25)
 
 
 if __name__ == "__main__":
