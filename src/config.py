@@ -13,6 +13,7 @@ WORDS_CSV_PATH = DATA_DIR / "words.csv"
 SETTINGS_CSV_PATH = DATA_DIR / "settings.csv"
 RECORD_CSV_PATH = DATA_DIR / "study_record.csv"
 PLAN_CSV_PATH = DATA_DIR / "day_plan.csv"
+TEST_HISTORY_CSV_PATH = DATA_DIR / "test_history.csv"
 
 # 엑셀에서 한글이 깨지지 않도록 BOM을 붙인 UTF-8을 쓴다 (설계 D-01)
 CSV_ENCODING = "utf-8-sig"
@@ -31,6 +32,8 @@ DEFAULT_SETTINGS = {
 # 시험 객관식 보기 개수 (정답 1 + 오답 3)
 CHOICE_COUNT = 4
 
+# 진도 항목 유형(assigned_type) 코드를 화면 라벨로 바꾸는 대응표
+ASSIGNED_TYPE_LABELS = {"new": "신규", "review": "복습", "wrong": "오답"}
 # 화면 표시용 라벨과 설정값(영문 코드) 대응표
 TEST_FORMAT_LABELS = {"객관식": "multiple", "주관식": "subjective"}
 TEST_DIRECTION_LABELS = {"영→한": "en_ko", "한→영": "ko_en", "양방향": "both"}
