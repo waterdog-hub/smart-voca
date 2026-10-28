@@ -1,0 +1,11 @@
+# Python 캐시
+__pycache__/
+*.pyc
+
+# 학습 진행 기록 (개인 학습 데이터, 커밋 제외)
+data/study_record.csv
+data/settings.csv
+data/day_plan.csv
+
+# 환경 변수 파일 (비밀정보)
+.env
