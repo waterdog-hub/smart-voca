@@ -8,6 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import List, Tuple
 
+from core.file_utils import atomic_write
 from config import CSV_ENCODING, DEFAULT_SETTINGS
 from models import Settings
 
@@ -56,7 +57,7 @@ class SettingsRepository:
     def save(self, settings: Settings, path: Path) -> None:
         """설정을 key,value 형식으로 저장한다."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding=CSV_ENCODING, newline="") as csv_file:
+        with atomic_write(path, CSV_ENCODING) as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(["key", "value"])
             for key, value in asdict(settings).items():

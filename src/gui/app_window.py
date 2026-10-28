@@ -7,8 +7,9 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import List, Set
 
-from config import PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, TEST_HISTORY_CSV_PATH, WORDS_CSV_PATH
+from config import BACKUP_DIR, PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, TEST_HISTORY_CSV_PATH, WORDS_CSV_PATH
 from core.day_planner import DayPlanner
+from core.file_utils import backup_file
 from core.plan_repository import PlanRepository
 from core.record_repository import RecordRepository
 from core.settings_repository import SettingsRepository
@@ -103,6 +104,10 @@ class AppWindow(tk.Tk):
     def save_test_history(self) -> None:
         TestHistoryRepository().save(self.test_history, TEST_HISTORY_CSV_PATH)
 
+    def backup_words_file(self):
+        """단어장 파일을 백업하고 백업 경로를 돌려준다. 파일이 없으면 None이다."""
+        return backup_file(WORDS_CSV_PATH, BACKUP_DIR)
+
     # ---------- 단어 편집 ----------
 
     def update_word(self, old_word: str, new_word: str, meaning_list: List[str]) -> None:
@@ -125,6 +130,10 @@ class AppWindow(tk.Tk):
     def current_day_items(self) -> List[DayPlanItem]:
         """현재 일차(settings.current_day)의 진도 항목들."""
         return [item for item in self.plan_items if item.day == self.settings.current_day]
+
+    def is_all_memorized(self) -> bool:
+        """단어장의 모든 단어를 한 번 이상 외웠으면 True다."""
+        return DayPlanner().is_all_memorized(self.words, self.records)
 
     def is_current_day_complete(self) -> bool:
         """현재 일차 남은 단어가 없으면 True다. 항목이 비어 있어도 True다 (단어 삭제로 비었을 때 막히지 않게)."""

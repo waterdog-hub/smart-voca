@@ -145,14 +145,23 @@ class WordListTab(ttk.Frame):
             messagebox.showerror("CSV 불러오기", str(error))
             return
 
+        # 덮어쓰기 전에 기존 단어장을 백업한다 (설계 D-22)
+        backup_path = self.app.backup_words_file()
+
         # 새 파일에 없는 단어는 진도에서도 빼야 한다 (삭제와 같은 규칙)
         old_words = {word.word for word in self.app.words}
         new_words = {word.word for word in words}
         self.app.words = words
         self.app.delete_words(old_words - new_words)
         self._save_and_refresh()
+
+        messages = []
+        if backup_path is not None:
+            messages.append(f"이전 단어장을 백업했습니다: {backup_path.name}")
         if skipped_count:
-            messagebox.showinfo("CSV 불러오기", f"중복되거나 빈 행 {skipped_count}개를 건너뛰었습니다.")
+            messages.append(f"중복되거나 빈 행 {skipped_count}개를 건너뛰었습니다.")
+        if messages:
+            messagebox.showinfo("CSV 불러오기", "\n".join(messages))
 
     def on_save_csv(self) -> None:
         path = filedialog.asksaveasfilename(title="단어 CSV 저장", defaultextension=".csv",

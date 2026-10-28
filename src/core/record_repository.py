@@ -8,6 +8,7 @@ from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Dict
 
+from core.file_utils import atomic_write
 from config import CSV_ENCODING
 from models import StudyRecord
 
@@ -38,7 +39,7 @@ class RecordRepository:
     def save(self, records: Dict[str, StudyRecord], path: Path) -> None:
         """기록 사전을 CSV로 저장한다."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding=CSV_ENCODING, newline="") as csv_file:
+        with atomic_write(path, CSV_ENCODING) as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=RECORD_FIELDS)
             writer.writeheader()
             for record in records.values():

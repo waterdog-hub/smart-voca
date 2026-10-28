@@ -14,6 +14,8 @@ SETTINGS_CSV_PATH = DATA_DIR / "settings.csv"
 RECORD_CSV_PATH = DATA_DIR / "study_record.csv"
 PLAN_CSV_PATH = DATA_DIR / "day_plan.csv"
 TEST_HISTORY_CSV_PATH = DATA_DIR / "test_history.csv"
+# 단어장을 CSV로 덮어쓰기 전에 남기는 백업 폴더 (설계 D-22)
+BACKUP_DIR = DATA_DIR / "backup"
 
 # 엑셀에서 한글이 깨지지 않도록 BOM을 붙인 UTF-8을 쓴다 (설계 D-01)
 CSV_ENCODING = "utf-8-sig"

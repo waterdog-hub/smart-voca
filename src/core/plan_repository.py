@@ -7,6 +7,7 @@ import csv
 from pathlib import Path
 from typing import List
 
+from core.file_utils import atomic_write
 from config import CSV_ENCODING
 from models import DayPlanItem
 
@@ -37,7 +38,7 @@ class PlanRepository:
     def save(self, items: List[DayPlanItem], path: Path) -> None:
         """진도 목록 전체를 CSV로 저장한다."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding=CSV_ENCODING, newline="") as csv_file:
+        with atomic_write(path, CSV_ENCODING) as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(PLAN_FIELDS)
             for item in items:
