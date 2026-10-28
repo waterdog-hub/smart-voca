@@ -42,10 +42,10 @@ class WordRepository:
                 if not word_text or not meaning_text:
                     skipped_count += 1
                     continue
-                if word_text in seen_words:
+                if word_text.lower() in seen_words:
                     skipped_count += 1
                     continue
-                seen_words.add(word_text)
+                seen_words.add(word_text.lower())
                 meaning_list = [item.strip() for item in meaning_text.split("/") if item.strip()]
                 words.append(Word(word=word_text, meaning_list=meaning_list))
         return words, skipped_count
