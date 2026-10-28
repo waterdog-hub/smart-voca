@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-10-21 - smart-voca - 시험 문항 생성 (객관식 보기, 방향 설정) (QuizBuilder)
+# 2026-10-21 - smart-voca - 시험 문항 생성 (객관식 보기, 방향 설정, 같은 뜻 단어 처리) (QuizBuilder)
 # 파일 위치: src/core/quiz_builder.py
 
 import random
@@ -11,7 +11,11 @@ from models import QuizItem, Word
 
 
 class QuizBuilder:
-    """단어장에서 시험 문항을 만든다."""
+    """단어장에서 시험 문항을 만든다.
+
+    같은 뜻을 가진 단어(예: a, an 모두 '하나의')는 서로의 정답이 될 수 있다.
+    그래서 'ko_en' 문항에서는 같은 뜻 단어를 오답 보기로 쓰지 않고, 주관식 정답에는 같은 뜻 단어를 모두 넣는다 (설계 D-21).
+    """
 
     def __init__(self, rng: Optional[random.Random] = None):
         self._rng = rng or random.Random()
@@ -33,7 +37,7 @@ class QuizBuilder:
             if test_format == "multiple":
                 quiz_items.append(self._build_choice_item(word, words, direction))
             else:
-                quiz_items.append(self._build_subjective_item(word, direction))
+                quiz_items.append(self._build_subjective_item(word, words, direction))
         return quiz_items
 
     def _choose_direction(self, test_direction: str) -> str:
@@ -42,13 +46,13 @@ class QuizBuilder:
             return self._rng.choice(["en_ko", "ko_en"])
         return test_direction
 
-    def _build_subjective_item(self, word: Word, direction: str) -> QuizItem:
+    def _build_subjective_item(self, word: Word, words: List[Word], direction: str) -> QuizItem:
         """주관식 문항: 보기 없이 답을 입력받는다."""
         if direction == "en_ko":
             return QuizItem(word=word.word, question=word.word,
                             answers=list(word.meaning_list), direction=direction)
         return QuizItem(word=word.word, question=word.meaning_text,
-                        answers=[word.word], direction=direction)
+                        answers=self._english_answers(word, words), direction=direction)
 
     def _build_choice_item(self, word: Word, words: List[Word], direction: str) -> QuizItem:
         """객관식 문항: 정답 1개와 오답 보기 3개를 섞는다."""
@@ -64,7 +68,7 @@ class QuizBuilder:
             answers = list(word.meaning_list)
         else:
             question = word.meaning_text
-            answers = [word.word]
+            answers = self._english_answers(word, words)
 
         return QuizItem(word=word.word, question=question, answers=answers,
                         direction=direction, choices=choices, correct_index=correct_index)
@@ -74,10 +78,12 @@ class QuizBuilder:
         return word.meaning_text if direction == "en_ko" else word.word
 
     def _distractor_options(self, word: Word, words: List[Word], direction: str, correct_option: str) -> List[str]:
-        """같은 단어장의 다른 단어에서 오답 보기를 뽑는다. 중복 보기는 만들지 않는다."""
+        """같은 단어장의 다른 단어에서 오답 보기를 뽑는다.
+        중복 보기와 같은 뜻을 가진 단어는 오답 보기로 쓰지 않는다 (같은 뜻이면 정답이 둘이 되기 때문).
+        """
         other_options = []
         for other in words:
-            if other.word == word.word:
+            if other.word == word.word or shares_meaning(word, other):
                 continue
             option = self._option_text(other, direction)
             if option != correct_option and option not in other_options:
@@ -86,3 +92,16 @@ class QuizBuilder:
         if len(other_options) < CHOICE_COUNT - 1:
             raise ValueError(f"'{word.word}' 문항의 보기를 만들 단어가 부족합니다.")
         return self._rng.sample(other_options, CHOICE_COUNT - 1)
+
+    def _english_answers(self, word: Word, words: List[Word]) -> List[str]:
+        """뜻을 보고 쓸 수 있는 영어 정답 목록: 원래 단어와 같은 뜻을 가진 단어 전부."""
+        answers = [word.word]
+        for other in words:
+            if other.word != word.word and shares_meaning(word, other) and other.word not in answers:
+                answers.append(other.word)
+        return answers
+
+
+def shares_meaning(first: Word, second: Word) -> bool:
+    """두 단어가 뜻을 하나라도 공유하면 True다."""
+    return bool(set(first.meaning_list) & set(second.meaning_list))
