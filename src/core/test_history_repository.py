@@ -7,6 +7,7 @@ from dataclasses import asdict, fields
 from pathlib import Path
 from typing import List
 
+from core.file_utils import atomic_write
 from config import CSV_ENCODING
 from models import TestHistory
 
@@ -44,7 +45,7 @@ class TestHistoryRepository:
     def save(self, entries: List[TestHistory], path: Path) -> None:
         """시험 기록 목록 전체를 CSV로 저장한다."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding=CSV_ENCODING, newline="") as csv_file:
+        with atomic_write(path, CSV_ENCODING) as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=HISTORY_FIELDS)
             writer.writeheader()
             for entry in entries:

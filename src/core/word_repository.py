@@ -7,6 +7,7 @@ import csv
 from pathlib import Path
 from typing import List, Tuple
 
+from core.file_utils import atomic_write
 from config import CSV_ENCODING
 from models import Word
 
@@ -52,7 +53,7 @@ class WordRepository:
     def save(self, words: List[Word], path: Path) -> None:
         """단어 목록을 헤더와 함께 CSV로 저장한다."""
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding=CSV_ENCODING, newline="") as csv_file:
+        with atomic_write(path, CSV_ENCODING) as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(REQUIRED_HEADER)
             for word in words:
