@@ -45,6 +45,14 @@ class RepositoryTest(unittest.TestCase):
         self.assertEqual(loaded[0].meaning_list, ["사과"])
         self.assertEqual(skipped, 3)
 
+    def test_word_load_treats_case_only_difference_as_duplicate(self):
+        path = self.dir / "words.csv"
+        path.write_text("word,meaning\nApple,사과\napple,능금\n", encoding="utf-8")
+
+        loaded, skipped = WordRepository().load(path)
+        self.assertEqual([word.word for word in loaded], ["Apple"])
+        self.assertEqual(skipped, 1)
+
     def test_word_load_rejects_wrong_header(self):
         path = self.dir / "words.csv"
         path.write_text("english,korean\napple,사과\n", encoding="utf-8")

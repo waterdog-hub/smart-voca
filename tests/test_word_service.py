@@ -38,6 +38,13 @@ class WordServiceValidateTest(unittest.TestCase):
     def test_renaming_to_other_existing_word_is_rejected(self):
         self.assertTrue(WordService.validate("run", "뜻", make_words(), editing_word="apple"))
 
+    def test_case_only_difference_counts_as_duplicate(self):
+        message = WordService.validate("APPLE", "사과", make_words())
+        self.assertIn("이미 있는 단어", message)
+
+    def test_editing_word_may_change_only_its_case(self):
+        self.assertEqual(WordService.validate("Apple", "사과", make_words(), editing_word="apple"), "")
+
     def test_split_meanings_ignores_blank_parts(self):
         self.assertEqual(WordService.split_meanings(" 달리다 / / 운영하다 "), ["달리다", "운영하다"])
 

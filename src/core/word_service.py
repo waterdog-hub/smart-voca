@@ -21,12 +21,13 @@ class WordService:
     def validate(word_text: str, meaning_text: str, words: List[Word], editing_word: Optional[str] = None) -> str:
         """입력값 오류 메시지를 돌려준다. 문제가 없으면 빈 문자열이다.
         editing_word는 지금 고치는 단어 이름이다. 자기 자신과의 중복은 허용한다.
+        대소문자만 다른 단어(Apple, apple)는 같은 단어로 본다 (설계 D-24).
         """
         if not word_text or not meaning_text:
             return "단어와 뜻을 모두 입력하세요."
         for word in words:
-            if word.word == word_text and word.word != editing_word:
-                return f"이미 있는 단어입니다: {word_text}"
+            if word.word != editing_word and word.word.lower() == word_text.lower():
+                return f"이미 있는 단어입니다: {word.word}"
         return ""
 
     @staticmethod
