@@ -125,6 +125,8 @@ class MemorizeTab(ttk.Frame):
             return
         if not self.app.words:
             reason = "단어장에 단어가 없습니다."
+        elif not self.app.is_all_memorized() and self.app.settings.daily_new_count == 0:
+            reason = "하루 신규 단어 수가 0이라 진도를 만들 수 없습니다. 설정에서 1 이상으로 바꾸세요."
         else:
             reason = ("모든 단어를 외웠고, 오답 기준을 넘긴 단어와 복습할 단어가 없어 진도를 만들 수 없습니다.\n"
                       "시험으로 오답을 쌓거나 설정의 오답 기준을 확인하세요.")

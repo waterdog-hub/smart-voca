@@ -10,7 +10,7 @@ from config import TEST_DIRECTION_LABELS, TEST_FORMAT_LABELS
 from gui.test_tab import _label_of
 
 COUNT_FIELDS = [
-    ("daily_new_count", "하루 신규 단어 수", 0),
+    ("daily_new_count", "하루 신규 단어 수", 1),
     ("daily_review_count", "하루 복습 단어 수", 0),
     ("daily_wrong_count", "하루 오답 단어 최대 수", 0),
     ("wrong_threshold", "오답 단어 기준 (이 횟수 이상)", 1),
