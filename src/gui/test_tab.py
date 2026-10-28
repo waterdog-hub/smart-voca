@@ -11,6 +11,7 @@ from typing import List, Optional
 from config import TEST_DIRECTION_LABELS, TEST_FORMAT_LABELS
 from core.answer_checker import AnswerChecker
 from core.quiz_builder import QuizBuilder
+from gui.test_history_dialog import TestHistoryDialog
 from models import QuizItem, TestHistory
 
 DIRECTION_PROMPTS = {
@@ -53,6 +54,7 @@ class TestTab(ttk.Frame):
         self.count_spin.set(10)
         self.count_spin.pack(side="left", padx=4)
         ttk.Button(controls, text="시험 시작", command=self.on_start).pack(side="right")
+        ttk.Button(controls, text="시험 기록", command=self.on_open_history).pack(side="right", padx=4)
 
         self.progress_label = ttk.Label(self, text="")
         self.progress_label.pack(fill="x", pady=(16, 4))
@@ -113,6 +115,9 @@ class TestTab(ttk.Frame):
         self.score = 0
         self.wrong_words = []
         self._show_question()
+
+    def on_open_history(self) -> None:
+        TestHistoryDialog(self, self.app)
 
     def on_submit(self) -> None:
         if not self.quiz:
