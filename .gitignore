@@ -6,6 +6,7 @@ __pycache__/
 data/study_record.csv
 data/settings.csv
 data/day_plan.csv
+data/test_history.csv
 
 # 환경 변수 파일 (비밀정보)
 .env
