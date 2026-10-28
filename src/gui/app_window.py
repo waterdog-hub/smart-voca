@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-10-21 - smart-voca - 메인 창, 데이터 로드·저장 허브, 탭 구성 (AppWindow)
+# 2026-10-21 - smart-voca - 메인 창, 데이터 로드·저장 허브, 탭 구성, 키 입력 전달 (AppWindow)
 # 파일 위치: src/gui/app_window.py
 
 import tkinter as tk
 from tkinter import messagebox, ttk
-from typing import List
+from typing import List, Set
 
-from config import PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, WORDS_CSV_PATH
+from config import PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, TEST_HISTORY_CSV_PATH, WORDS_CSV_PATH
 from core.day_planner import DayPlanner
 from core.plan_repository import PlanRepository
 from core.record_repository import RecordRepository
 from core.settings_repository import SettingsRepository
+from core.test_history_repository import TestHistoryRepository
 from core.word_repository import WordRepository
+from core.word_service import WordService
 from gui.memorize_tab import MemorizeTab
 from gui.settings_tab import SettingsTab
 from gui.test_tab import TestTab
 from gui.word_list_tab import WordListTab
-from models import DayPlanItem, Settings, StudyRecord, Word
+from models import DayPlanItem, Settings, StudyRecord, TestHistory, Word
+
+# 글자를 입력하는 칸에서는 단축키를 가로채지 않는다
+TEXT_INPUT_WIDGETS = (tk.Entry, ttk.Entry, ttk.Spinbox, ttk.Combobox, tk.Text)
 
 
 class AppWindow(tk.Tk):
@@ -26,13 +31,14 @@ class AppWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("smart-voca 단어장")
-        self.geometry("760x560")
-        self.minsize(640, 480)
+        self.geometry("860x600")
+        self.minsize(680, 500)
 
         self.words: List[Word] = []
         self.records: dict = {}
         self.settings = Settings()
         self.plan_items: List[DayPlanItem] = []
+        self.test_history: List[TestHistory] = []
 
         self._load_all()
 
@@ -51,6 +57,7 @@ class AppWindow(tk.Tk):
 
         self._notebook = notebook
         notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
+        self.bind_all("<KeyPress>", self._on_key_press)
 
     # ---------- 데이터 로드 ----------
 
@@ -72,6 +79,7 @@ class AppWindow(tk.Tk):
         self.records = RecordRepository().load(RECORD_CSV_PATH)
         self.ensure_records_for_words()
         self.plan_items = PlanRepository().load(PLAN_CSV_PATH)
+        self.test_history = TestHistoryRepository().load(TEST_HISTORY_CSV_PATH)
 
     def ensure_records_for_words(self) -> None:
         """단어장에 있는데 기록이 없는 단어에 빈 기록을 만든다."""
@@ -92,6 +100,26 @@ class AppWindow(tk.Tk):
     def save_plan(self) -> None:
         PlanRepository().save(self.plan_items, PLAN_CSV_PATH)
 
+    def save_test_history(self) -> None:
+        TestHistoryRepository().save(self.test_history, TEST_HISTORY_CSV_PATH)
+
+    # ---------- 단어 편집 ----------
+
+    def update_word(self, old_word: str, new_word: str, meaning_list: List[str]) -> None:
+        """단어 수정을 반영하고 단어·기록·진도 파일을 함께 저장한다."""
+        WordService.update_word(old_word, new_word, meaning_list,
+                                self.words, self.records, self.plan_items)
+        self.ensure_records_for_words()
+        self.save_words()
+        self.save_records()
+        self.save_plan()
+
+    def delete_words(self, word_texts: Set[str]) -> None:
+        """단어를 지우고 진도에서도 뺀다. 학습 기록은 남긴다 (설계 T-01)."""
+        WordService.remove_words(word_texts, self.words, self.plan_items)
+        self.save_words()
+        self.save_plan()
+
     # ---------- 진도 ----------
 
     def current_day_items(self) -> List[DayPlanItem]:
@@ -99,9 +127,8 @@ class AppWindow(tk.Tk):
         return [item for item in self.plan_items if item.day == self.settings.current_day]
 
     def is_current_day_complete(self) -> bool:
-        """현재 일차 진도를 모두 외웠으면 True. 진도가 없으면 False."""
-        items = self.current_day_items()
-        return bool(items) and all(item.done for item in items)
+        """현재 일차 남은 단어가 없으면 True다. 항목이 비어 있어도 True다 (단어 삭제로 비었을 때 막히지 않게)."""
+        return all(item.done for item in self.current_day_items())
 
     def create_next_day_plan(self) -> bool:
         """다음 일차 진도를 만들고 저장한다. 만들었으면 True."""
@@ -116,13 +143,33 @@ class AppWindow(tk.Tk):
         self.save_settings()
         return True
 
-    # ---------- 탭 전환 ----------
+    # ---------- 시험 기록 ----------
+
+    def add_test_history(self, entry: TestHistory) -> None:
+        self.test_history.append(entry)
+        self.save_test_history()
+
+    # ---------- 탭 전환과 키 입력 ----------
+
+    def current_tab(self):
+        return self._notebook.nametowidget(self._notebook.select())
 
     def _on_tab_changed(self, _event) -> None:
         """탭을 바꿀 때 해당 탭의 화면을 최신 데이터로 다시 그린다."""
-        current_tab = self._notebook.nametowidget(self._notebook.select())
+        current_tab = self.current_tab()
         if hasattr(current_tab, "refresh"):
             current_tab.refresh()
+
+    def _on_key_press(self, event) -> None:
+        """키 입력을 현재 탭에 넘긴다. 대화상자가 떠 있거나 입력칸에 커서가 있으면 무시한다."""
+        widget = event.widget
+        if not isinstance(widget, tk.Misc) or widget.winfo_toplevel() is not self:
+            return
+        if isinstance(widget, TEXT_INPUT_WIDGETS):
+            return
+        handle_key = getattr(self.current_tab(), "handle_key", None)
+        if handle_key is not None:
+            handle_key(event.keysym)
 
 
 if __name__ == "__main__":

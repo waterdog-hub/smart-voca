@@ -4,14 +4,14 @@
 # 파일 위치: src/gui/test_tab.py
 
 import tkinter as tk
-from datetime import date
+from datetime import date, datetime
 from tkinter import messagebox, ttk
 from typing import List, Optional
 
 from config import TEST_DIRECTION_LABELS, TEST_FORMAT_LABELS
 from core.answer_checker import AnswerChecker
 from core.quiz_builder import QuizBuilder
-from models import QuizItem
+from models import QuizItem, TestHistory
 
 DIRECTION_PROMPTS = {
     "en_ko": "다음 영어 단어의 뜻은?",
@@ -56,6 +56,8 @@ class TestTab(ttk.Frame):
 
         self.progress_label = ttk.Label(self, text="")
         self.progress_label.pack(fill="x", pady=(16, 4))
+        self.progress_bar = ttk.Progressbar(self, maximum=1, value=0)
+        self.progress_bar.pack(fill="x")
         self.prompt_label = ttk.Label(self, text="", font=("맑은 고딕", 12))
         self.prompt_label.pack(fill="x")
         self.question_label = ttk.Label(self, text="", font=("맑은 고딕", 24, "bold"))
@@ -72,8 +74,10 @@ class TestTab(ttk.Frame):
         self.feedback_label = ttk.Label(self, text="", font=("맑은 고딕", 12), wraplength=660)
         self.feedback_label.pack(fill="x", pady=12)
 
-        self.submit_button = ttk.Button(self, text="제출", command=self.on_submit)
+        self.submit_button = ttk.Button(self, text="제출 (Enter)", command=self.on_submit)
         self.submit_button.pack(side="bottom", anchor="e")
+        self.current_format = "multiple"
+        self.current_direction = "en_ko"
 
         self.refresh()
 
@@ -96,6 +100,8 @@ class TestTab(ttk.Frame):
             return
         test_format = TEST_FORMAT_LABELS.get(self.format_box.get(), "multiple")
         test_direction = TEST_DIRECTION_LABELS.get(self.direction_box.get(), "en_ko")
+        self.current_format = test_format
+        self.current_direction = test_direction
 
         try:
             self.quiz = QuizBuilder().build_quiz(self.app.words, test_format, test_direction, max(count, 1))
@@ -135,7 +141,7 @@ class TestTab(ttk.Frame):
 
         self.answered = True
         self._set_inputs_enabled(False)
-        self.submit_button.configure(text="다음" if self.index + 1 < len(self.quiz) else "결과 보기")
+        self.submit_button.configure(text="다음 (Enter)" if self.index + 1 < len(self.quiz) else "결과 보기 (Enter)")
 
     def _go_next(self) -> None:
         self.index += 1
@@ -148,10 +154,11 @@ class TestTab(ttk.Frame):
         item = self.quiz[self.index]
         self.answered = False
         self.progress_label.configure(text=f"{self.index + 1} / {len(self.quiz)}  ·  정답 {self.score}")
+        self.progress_bar.configure(maximum=len(self.quiz), value=self.index)
         self.prompt_label.configure(text=DIRECTION_PROMPTS.get(item.direction, ""))
         self.question_label.configure(text=item.question)
         self.feedback_label.configure(text="")
-        self.submit_button.configure(text="제출", state="normal")
+        self.submit_button.configure(text="제출 (Enter)", state="normal")
 
         self._clear_answer_widgets()
         if item.choices:
@@ -175,19 +182,47 @@ class TestTab(ttk.Frame):
         self.question_label.configure(text=f"정답 {self.score} / {total}")
         self.prompt_label.configure(text="시험이 끝났습니다.")
         self.progress_label.configure(text="")
+        self.progress_bar.configure(maximum=max(total, 1), value=total)
         if self.wrong_words:
             self.feedback_label.configure(text="틀린 단어: " + ", ".join(self.wrong_words))
         else:
             self.feedback_label.configure(text="모두 맞혔습니다.")
-        self.submit_button.configure(text="제출", state="disabled")
+        self.submit_button.configure(text="제출 (Enter)", state="disabled")
+        self._save_history(total)
+
+    def _save_history(self, total: int) -> None:
+        """시험 결과를 test_history.csv에 남긴다."""
+        self.app.add_test_history(TestHistory(
+            taken_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+            test_format=self.current_format,
+            test_direction=self.current_direction,
+            total=total,
+            score=self.score,
+        ))
 
     def _show_idle(self) -> None:
         self.prompt_label.configure(text="형식과 방향을 고르고 '시험 시작'을 누르세요.")
         self.question_label.configure(text="")
         self.progress_label.configure(text="")
+        self.progress_bar.configure(maximum=1, value=0)
         self.feedback_label.configure(text="")
         self._clear_answer_widgets()
         self.submit_button.configure(state="disabled")
+
+    def handle_key(self, keysym: str) -> None:
+        """메인 창이 넘겨주는 키 입력. 객관식은 1~4로 고르고, Enter로 제출하거나 다음으로 넘어간다."""
+        if not self.quiz:
+            return
+        if keysym in ("Return", "KP_Enter"):
+            self.on_submit()
+            return
+        item = self.quiz[self.index]
+        if self.answered or not item.choices:
+            return
+        if keysym in ("1", "2", "3", "4"):
+            choice_index = int(keysym) - 1
+            if choice_index < len(item.choices):
+                self.choice_var.set(choice_index)
 
     def _record_wrong(self, word_text: str) -> None:
         """오답 횟수를 올리고 바로 저장한다."""
