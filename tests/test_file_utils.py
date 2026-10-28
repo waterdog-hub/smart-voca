@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from core.file_utils import atomic_write, backup_file  # noqa: E402
+from core.file_utils import atomic_write, backup_file, prune_backups  # noqa: E402
 
 
 class AtomicWriteTest(unittest.TestCase):
@@ -56,6 +56,40 @@ class BackupFileTest(unittest.TestCase):
     def test_missing_source_gives_none(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             self.assertIsNone(backup_file(Path(temp_dir) / "none.csv", Path(temp_dir) / "backup"))
+
+
+class PruneBackupsTest(unittest.TestCase):
+
+    def test_keeps_only_newest_backups_by_name_order(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            backup_dir = Path(temp_dir)
+            for index in range(5):
+                (backup_dir / f"words_20261028_0900{index:02d}_000000.csv").write_text(str(index), encoding="utf-8")
+
+            deleted = prune_backups(backup_dir, "words_", 3)
+
+            remaining = sorted(path.name for path in backup_dir.iterdir())
+            self.assertEqual(len(deleted), 2)
+            self.assertEqual(remaining, [
+                "words_20261028_090002_000000.csv",
+                "words_20261028_090003_000000.csv",
+                "words_20261028_090004_000000.csv",
+            ])
+
+    def test_other_files_are_never_deleted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            backup_dir = Path(temp_dir)
+            (backup_dir / "notes.txt").write_text("keep", encoding="utf-8")
+            for index in range(3):
+                (backup_dir / f"words_2026102{index}_000000_000000.csv").write_text("x", encoding="utf-8")
+
+            prune_backups(backup_dir, "words_", 1)
+
+            self.assertTrue((backup_dir / "notes.txt").exists())
+
+    def test_missing_folder_is_not_an_error(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertEqual(prune_backups(Path(temp_dir) / "none", "words_", 20), [])
 
 
 if __name__ == "__main__":

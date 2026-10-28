@@ -7,9 +7,9 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import List, Set
 
-from config import BACKUP_DIR, PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, TEST_HISTORY_CSV_PATH, WORDS_CSV_PATH
+from config import BACKUP_DIR, BACKUP_KEEP_COUNT, PLAN_CSV_PATH, RECORD_CSV_PATH, SETTINGS_CSV_PATH, TEST_HISTORY_CSV_PATH, WORDS_CSV_PATH
 from core.day_planner import DayPlanner
-from core.file_utils import backup_file
+from core.file_utils import backup_file, prune_backups
 from core.plan_repository import PlanRepository
 from core.record_repository import RecordRepository
 from core.settings_repository import SettingsRepository
@@ -106,7 +106,10 @@ class AppWindow(tk.Tk):
 
     def backup_words_file(self):
         """단어장 파일을 백업하고 백업 경로를 돌려준다. 파일이 없으면 None이다."""
-        return backup_file(WORDS_CSV_PATH, BACKUP_DIR)
+        backup_path = backup_file(WORDS_CSV_PATH, BACKUP_DIR)
+        if backup_path is not None:
+            prune_backups(BACKUP_DIR, f"{WORDS_CSV_PATH.stem}_", BACKUP_KEEP_COUNT)
+        return backup_path
 
     # ---------- 단어 편집 ----------
 

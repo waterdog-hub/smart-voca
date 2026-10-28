@@ -6,7 +6,7 @@ import os
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, Optional, TextIO
+from typing import Iterator, List, Optional, TextIO
 
 
 @contextmanager
@@ -31,7 +31,21 @@ def backup_file(source: Path, backup_dir: Path) -> Optional[Path]:
     if not source.exists():
         return None
     backup_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 마이크로초까지 붙여서 같은 초에 두 번 백업해도 이름이 겹치지 않게 한다
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     target = backup_dir / f"{source.stem}_{stamp}{source.suffix}"
     target.write_bytes(source.read_bytes())
     return target
+
+
+def prune_backups(backup_dir: Path, file_prefix: str, keep_count: int) -> List[Path]:
+    """백업 폴더에서 file_prefix로 시작하는 파일 중 오래된 것부터 지워 keep_count개만 남긴다.
+    이름에 붙은 시각 순서로 판단한다. 다른 이름의 파일은 건드리지 않는다. 지운 파일 목록을 돌려준다 (설계 D-25).
+    """
+    if not backup_dir.exists():
+        return []
+    backups = sorted(path for path in backup_dir.glob(f"{file_prefix}*") if path.is_file())
+    excess = backups[:max(len(backups) - keep_count, 0)]
+    for path in excess:
+        path.unlink()
+    return excess
