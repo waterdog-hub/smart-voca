@@ -92,6 +92,9 @@ class TestTab(ttk.Frame):
         self._show_idle()
 
     def on_start(self) -> None:
+        if self.quiz and not messagebox.askyesno(
+                "시험 시작", "진행 중인 시험을 그만두고 새로 시작할까요?\n이미 제출한 답은 저장되어 있습니다."):
+            return
         if not self.app.words:
             messagebox.showwarning("시험", "단어장에 단어가 없습니다.")
             return
