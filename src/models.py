@@ -52,6 +52,16 @@ class Settings:
 
 
 @dataclass
+class TestHistory:
+    """시험 한 세트의 결과 (test_history.csv 한 행)"""
+    taken_at: str                     # YYYY-MM-DD HH:MM
+    test_format: str                  # multiple / subjective
+    test_direction: str               # en_ko / ko_en / both
+    total: int
+    score: int
+
+
+@dataclass
 class QuizItem:
     """시험 문항 하나. choices는 객관식일 때만 채운다."""
     word: str
