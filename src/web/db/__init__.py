@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# 2026-11-04 - smart-voca - 웹 서비스 DB 패키지
+# 파일 위치: src/web/db/__init__.py

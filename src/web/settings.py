@@ -5,6 +5,7 @@
 
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,8 @@ class Settings(BaseSettings):
 
     # 설정을 빠뜨린 운영 서버에서 API 문서가 열리지 않도록 기본값을 production으로 둔다 (D-API07)
     app_env: Literal["local", "production"] = "production"
+    # 기본값을 두지 않는다. 운영에서 빠뜨렸을 때 빈 SQLite로 조용히 뜨는 사고를 막는다
+    database_url: str = Field(min_length=1)
 
     @property
     def is_production(self) -> bool:
