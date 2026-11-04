@@ -1,0 +1,62 @@
+{# 2026-11-04 - smart-voca - T-02 시험 진행, T-03 결과 (화면 설계 §4.4). 파일 위치: src/web/templates/test_take.html #}
+{% extends "member_base.html" %}
+{% block scripts %}{% if status == "open" %}<script src="/static/test_take.js" defer></script>{% endif %}{% endblock %}
+{% block member_content %}
+{% if status == "submitted" %}
+<section class="result-panel" id="test-finished">
+  <h2>이미 제출한 시험입니다</h2>
+  <p id="finished-score">{{ session.total }}문항 중 {{ session.score }}개를 맞혔습니다 ({{ percent }}%).</p>
+  <div class="button-row">
+    <a class="button-link" href="/tests">새 시험</a>
+    <a class="button-link" href="/tests/history">시험 기록</a>
+  </div>
+</section>
+{% elif status == "expired" %}
+<section class="result-panel" id="test-expired">
+  <h2>폐기된 시험입니다</h2>
+  <p>시간이 지났거나 새 시험을 시작해 이 시험은 볼 수 없습니다.</p>
+  <a class="button-link" href="/tests">새 시험</a>
+</section>
+{% else %}
+<div id="test-app" data-attempt-id="{{ attempt_id }}">
+  <div id="question-area" hidden>
+    <p class="help" id="question-progress-text" aria-live="polite"></p>
+    <progress id="question-progress" max="1" value="0" aria-label="시험 진행률"></progress>
+    <form id="question-form" novalidate>
+      <p class="help" id="question-prompt"></p>
+      <p class="card-word test-question" id="question-text"></p>
+      <fieldset id="choice-list" class="choice-list" hidden>
+        <legend class="visually-hidden">보기</legend>
+      </fieldset>
+      <div class="field" id="text-answer" hidden>
+        <label for="text-answer-input">답</label>
+        <input id="text-answer-input" type="text" maxlength="500" autocomplete="off">
+      </div>
+      <div class="form-actions">
+        <button type="button" id="prev-question" class="secondary">이전</button>
+        <button type="submit" id="next-question">다음</button>
+      </div>
+    </form>
+    <p class="help" id="test-key-help">단축키: 보기 선택 1~4, 다음 문항과 제출 Enter</p>
+  </div>
+
+  <section id="test-result" aria-labelledby="result-title" hidden>
+    <div class="result-panel">
+      <h2 id="result-title">시험 결과</h2>
+      <p id="result-score"></p>
+      <div class="button-row">
+        <a class="button-link" href="/tests">새 시험</a>
+        <a class="button-link" href="/tests/history">시험 기록</a>
+      </div>
+    </div>
+    <p><button type="button" id="wrong-only" class="secondary" aria-pressed="false">틀린 문항만 보기</button></p>
+    <div class="table-scroll">
+      <table id="result-table" class="plan-table">
+        <thead><tr><th scope="col">번호</th><th scope="col">문제</th><th scope="col">내 답</th><th scope="col">정답</th><th scope="col">결과</th></tr></thead>
+        <tbody id="result-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

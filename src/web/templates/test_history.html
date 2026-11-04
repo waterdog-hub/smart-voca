@@ -1,0 +1,28 @@
+{# 2026-11-04 - smart-voca - R-01 시험 기록. 읽기 전용이라 서버가 그린다 (D-19, D-UI05). 파일 위치: src/web/templates/test_history.html #}
+{% extends "member_base.html" %}
+{% block member_content %}
+{% if not rows %}
+<section class="result-panel">
+  <p id="history-empty">아직 시험 기록이 없습니다. 시험을 보면 여기에 쌓입니다.</p>
+  <a class="button-link" href="/tests">시험 보러 가기</a>
+</section>
+{% else %}
+<p id="history-summary">시험 {{ total_count }}회, 전체 정답률 {{ overall_percent }}%</p>
+<div class="table-scroll">
+  <table id="history-table" class="plan-table">
+    <thead><tr><th scope="col">날짜</th><th scope="col">형식</th><th scope="col">방향</th><th scope="col">점수</th><th scope="col">정답률</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr><td>{{ row.taken_at }}</td><td>{{ row.format_label }}</td><td>{{ row.direction_label }}</td><td>{{ row.score }}/{{ row.total }}</td><td>{{ row.percent }}%</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if previous_page or next_page %}
+<div class="button-row pager">
+  {% if previous_page %}<a class="button-link" href="/tests/history?page={{ previous_page }}">이전</a>{% endif %}
+  {% if next_page %}<a class="button-link" href="/tests/history?page={{ next_page }}">다음</a>{% endif %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

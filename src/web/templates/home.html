@@ -1,4 +1,4 @@
-{# 2026-11-04 - smart-voca - H-01 홈. 서버가 그리고 일차 생성만 자바스크립트로 호출한다 (D-UI05). 최근 시험은 M6에서 추가한다. 파일 위치: src/web/templates/home.html #}
+{# 2026-11-04 - smart-voca - H-01 홈. 서버가 그리고 일차 생성만 자바스크립트로 호출한다 (D-UI05). 파일 위치: src/web/templates/home.html #}
 {% extends "member_base.html" %}
 {% block scripts %}<script src="/static/plans.js" defer></script>{% endblock %}
 {% block member_content %}
@@ -25,6 +25,16 @@
   <p id="overall-progress">전체 {{ progress.total_words }}개 중 {{ progress.memorized_words }}개를 외웠습니다.</p>
   {% if progress.total_words %}
   <progress max="{{ progress.total_words }}" value="{{ progress.memorized_words }}" aria-label="전체 진행률"></progress>
+  {% endif %}
+</section>
+<section class="result-panel" aria-labelledby="latest-test-title">
+  <h2 id="latest-test-title">최근 시험</h2>
+  {% if latest_test %}
+  <p id="latest-test">{{ latest_test.taken_at }}, {{ latest_test.format_label }}, {{ latest_test.direction_label }}, {{ latest_test.total }}문항 중 {{ latest_test.score }}개 ({{ latest_test.percent }}%)</p>
+  <a href="/tests/history">시험 기록 보기</a>
+  {% else %}
+  <p id="latest-test-empty">아직 시험 기록이 없습니다.</p>
+  <a href="/tests">시험 보러 가기</a>
   {% endif %}
 </section>
 {% endblock %}

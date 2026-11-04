@@ -1,0 +1,38 @@
+{# 2026-11-04 - smart-voca - T-01 시험 시작 (화면 설계 §4.4). 파일 위치: src/web/templates/tests.html #}
+{% extends "member_base.html" %}
+{% block scripts %}<script src="/static/tests.js" defer></script>{% endblock %}
+{% block member_content %}
+{% if open_attempt_id %}
+<section class="banner" id="open-test-notice">
+  <p>진행 중인 시험이 있습니다.</p>
+  <a class="button-link" id="continue-test" href="/tests/{{ open_attempt_id }}">이어서 보기</a>
+</section>
+{% endif %}
+<form id="test-start-form" class="settings-form" data-word-count="{{ word_count }}" data-multiple-minimum="{{ multiple_minimum }}" data-has-open="{{ 'true' if open_attempt_id else 'false' }}" novalidate>
+  <div class="field">
+    <label for="test_format">형식</label>
+    <select id="test_format" name="test_format">
+      {% for code, label in format_choices %}<option value="{{ code }}" {% if code == default_format %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <p class="field-error" id="test_format-error" hidden></p>
+  </div>
+  <div class="field">
+    <label for="test_direction">방향</label>
+    <select id="test_direction" name="test_direction">
+      {% for code, label in direction_choices %}<option value="{{ code }}" {% if code == default_direction %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <p class="field-error" id="test_direction-error" hidden></p>
+  </div>
+  <div class="field">
+    <label for="count">문항 수</label>
+    <input id="count" name="count" type="number" inputmode="numeric" step="1" min="{{ min_count }}" max="{{ max_count }}" value="{{ default_count }}" aria-describedby="count-help" required>
+    <p class="help" id="count-help">{{ min_count }} 이상 {{ max_count }} 이하. 단어 수({{ word_count }}개)보다 크면 단어 수만큼 냅니다.</p>
+    <p class="field-error" id="count-error" hidden></p>
+  </div>
+  <p class="help" id="test-not-possible" role="status" hidden></p>
+  <div class="form-actions">
+    <button type="submit" id="test-start" class="needs-verified">시험 시작</button>
+  </div>
+</form>
+<p><a href="/tests/history">시험 기록 보기</a></p>
+{% endblock %}

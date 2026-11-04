@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, H-01, W-01~W-03, M-01, M-02, S-01)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, H-01, W-01~W-03, M-01, M-02, T-01~T-03, R-01, S-01)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
 from urllib.parse import urlencode
 
-from config import ASSIGNED_TYPE_LABELS
-from fastapi import APIRouter, Request
+from config import ASSIGNED_TYPE_LABELS, TEST_DIRECTION_LABELS, TEST_FORMAT_LABELS
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from web.dependencies import DbSession, OptionalSession
-from web.repositories import plan_repository
-from web.services.plan_service import PlanService
+from web.repositories import plan_repository, setting_repository, test_repository
+from web.schemas.common import MAX_DB_INT
+from web.services.plan_service import KOREA_TIME, PlanService
 from web.services.setting_service import COUNT_FIELDS, DIRECTION_CHOICES, FORMAT_CHOICES
+from web.services.test_service import (
+    DEFAULT_QUESTION_COUNT,
+    MAX_QUESTION_COUNT,
+    MIN_QUESTION_COUNT,
+    TestService,
+    accuracy_percent,
+    minimum_words,
+)
 
 router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
@@ -22,6 +31,11 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "
 
 def _render(request: Request, template_name: str, **context: object) -> Response:
     return templates.TemplateResponse(request, template_name, context)
+
+
+HISTORY_PAGE_SIZE = 20
+FORMAT_LABELS = {code: label for label, code in TEST_FORMAT_LABELS.items()}
+DIRECTION_LABELS = {code: label for label, code in TEST_DIRECTION_LABELS.items()}
 
 
 def _login_redirect(request: Request) -> Response:
@@ -39,6 +53,18 @@ def _selected_day(raw_day: str | None, days: list[tuple[int, int, int]], current
         if any(summary[0] == int(raw_day) for summary in days):
             return int(raw_day)
     return current_day
+
+
+def _session_row(session: object) -> dict[str, object]:
+    return {
+        # 저장은 UTC, 표시는 한국 시간이다 (D-W11)
+        "taken_at": session.taken_at.astimezone(KOREA_TIME).strftime("%Y-%m-%d %H:%M"),
+        "format_label": FORMAT_LABELS[session.test_format],
+        "direction_label": DIRECTION_LABELS[session.test_direction],
+        "total": session.total,
+        "score": session.score,
+        "percent": accuracy_percent(session.score, session.total),
+    }
 
 
 def _render_member_page(
@@ -67,8 +93,18 @@ def _render_member_page(
 
 @router.get("/")
 def home(request: Request, current: OptionalSession, db: DbSession) -> Response:
-    progress = PlanService(db, current.user.id).progress() if current else None
-    return _render_member_page(request, current, "home.html", "홈", "home", progress=progress)
+    if current is None:
+        return _login_redirect(request)
+    latest = test_repository.list_sessions(db, current.user.id, limit=1, offset=0)
+    return _render_member_page(
+        request,
+        current,
+        "home.html",
+        "홈",
+        "home",
+        progress=PlanService(db, current.user.id).progress(),
+        latest_test=_session_row(latest[0]) if latest else None,
+    )
 
 
 @router.get("/memorize")
@@ -122,6 +158,84 @@ def plans_page(request: Request, current: OptionalSession, db: DbSession) -> Res
 @router.get("/words")
 def words_page(request: Request, current: OptionalSession) -> Response:
     return _render_member_page(request, current, "words.html", "단어장", "words")
+
+
+@router.get("/tests")
+def tests_page(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    setting = setting_repository.get_settings(db, current.user.id)
+    open_attempt = TestService(db, current.user.id).find_open_attempt()
+    return _render_member_page(
+        request,
+        current,
+        "tests.html",
+        "시험",
+        "tests",
+        open_attempt_id=open_attempt.id if open_attempt else None,
+        word_count=plan_repository.count_active_words(db, current.user.id),
+        multiple_minimum=minimum_words("multiple"),
+        format_choices=FORMAT_CHOICES,
+        direction_choices=DIRECTION_CHOICES,
+        default_format=setting.test_format,
+        default_direction=setting.test_direction,
+        min_count=MIN_QUESTION_COUNT,
+        max_count=MAX_QUESTION_COUNT,
+        default_count=DEFAULT_QUESTION_COUNT,
+    )
+
+
+# 경로가 {attempt_id}와 겹치지 않도록 고정 경로를 앞에 둔다
+@router.get("/tests/history")
+def test_history_page(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    raw_page = request.query_params.get("page", "")
+    # 주소를 손으로 고쳐 잘못된 쪽이 와도 오류 대신 첫 쪽을 보여 준다
+    page = int(raw_page) if raw_page.isascii() and raw_page.isdigit() and len(raw_page) < 7 else 1
+    page = max(page, 1)
+    sessions, count, overall = TestService(db, current.user.id).history(
+        HISTORY_PAGE_SIZE, (page - 1) * HISTORY_PAGE_SIZE
+    )
+    return _render_member_page(
+        request,
+        current,
+        "test_history.html",
+        "시험 기록",
+        "test-history",
+        rows=[_session_row(session) for session in sessions],
+        total_count=count,
+        overall_percent=overall,
+        previous_page=page - 1 if page > 1 else None,
+        next_page=page + 1 if page * HISTORY_PAGE_SIZE < count else None,
+    )
+
+
+@router.get("/tests/{attempt_id:int}")
+def test_take_page(
+    attempt_id: int, request: Request, current: OptionalSession, db: DbSession
+) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    described = (
+        TestService(db, current.user.id).describe_attempt(attempt_id)
+        if attempt_id <= MAX_DB_INT
+        else None
+    )
+    if described is None:
+        raise HTTPException(status_code=404)
+    status, session = described
+    return _render_member_page(
+        request,
+        current,
+        "test_take.html",
+        "시험",
+        "tests",
+        attempt_id=attempt_id,
+        status=status,
+        session=session,
+        percent=accuracy_percent(session.score, session.total) if session else 0,
+    )
 
 
 @router.get("/settings")
