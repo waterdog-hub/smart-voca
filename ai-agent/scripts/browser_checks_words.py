@@ -83,6 +83,10 @@ def check_words_flow(session: Session, work_dir: Path) -> None:
             " && document.getElementById('add-word-error').textContent.includes('apple')"
         ),
     )
+    check(
+        "오류 칸에 테두리와 오류 표시 속성",
+        browser.js("document.getElementById('add-word').getAttribute('aria-invalid')==='true'"),
+    )
     html_word = "<img src=x onerror=window.__xss=1>"
     _add_word(browser, html_word, html_word)
     browser.wait("document.querySelectorAll('#word-rows tr').length===2")
@@ -174,7 +178,11 @@ def check_words_flow(session: Session, work_dir: Path) -> None:
     browser.js("window.confirm=()=>false; document.getElementById('delete-selected').click()")
     time.sleep(0.3)
     check("삭제 확인을 취소하면 단어 유지", _first_word(browser) == "Apple", _first_word(browser))
-    browser.js("window.confirm=()=>true; document.getElementById('delete-selected').click()")
+    disabled_while_saving = browser.js(
+        "(()=>{window.confirm=()=>true;const b=document.getElementById('delete-selected');"
+        "b.click();return new Promise(r=>queueMicrotask(()=>r(b.disabled)));})()"
+    )
+    check("삭제 요청 중 버튼 비활성", disabled_while_saving is True)
     check("삭제 확인 후 안내", browser.wait("document.getElementById('message').textContent.includes('1개를 삭제')"), browser.text("message"))
     _list_settled(browser)
     check("삭제 후 선택 해제", browser.js("document.getElementById('delete-selected').disabled"))

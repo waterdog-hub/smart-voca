@@ -1,0 +1,37 @@
+{# 2026-11-04 - smart-voca - M-02 일차 보기. 읽기 전용이라 서버가 그린다 (D-16, D-UI05). 파일 위치: src/web/templates/plans.html #}
+{% extends "member_base.html" %}
+{% block member_content %}
+{% if not days %}
+<section class="result-panel">
+  <p id="plans-empty">아직 진도가 없습니다. 홈에서 일차를 만들어 시작하세요.</p>
+  <a class="button-link" href="/">홈으로 가기</a>
+</section>
+{% else %}
+<form id="plans-form" method="get" action="/plans" class="memorize-toolbar">
+  <div class="field">
+    <label for="plans-day">일차</label>
+    <select id="plans-day" name="day">
+      {% for summary in days %}
+      <option value="{{ summary[0] }}" {% if summary[0] == selected_day %}selected{% endif %}>{{ summary[0] }}일차 ({{ summary[2] }}/{{ summary[1] }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="secondary">보기</button>
+</form>
+{% if rows %}
+<div class="table-scroll">
+  <table id="plan-table" class="plan-table">
+    <thead><tr><th scope="col">단어</th><th scope="col">뜻</th><th scope="col">구분</th><th scope="col">외움</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr><td>{{ row.word }}</td><td>{{ row.meaning }}</td><td>{{ row.type_label }}</td><td>{{ '외움' if row.done else '아직' }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p id="plans-day-empty">이 일차에 남은 단어가 없습니다.</p>
+{% endif %}
+<p><a href="/memorize?day={{ selected_day }}">이 일차 암기하기</a></p>
+{% endif %}
+{% endblock %}

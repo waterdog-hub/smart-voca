@@ -20,6 +20,7 @@ from pathlib import Path
 
 from browser_check_lib import PROJECT_ROOT, Browser, Report, Session, find_browser, free_port, wait_for_url
 from browser_checks_auth import check_auth_flow
+from browser_checks_learning import check_home_and_memorize
 from browser_checks_settings import check_settings_flow
 from browser_checks_words import check_words_flow
 
@@ -73,6 +74,7 @@ def run_checks(work_dir: Path, report: Report) -> None:
             check_auth_flow(session)
             check_words_flow(session, work_dir)
             check_settings_flow(session)
+            check_home_and_memorize(session)
             report.check("처리되지 않은 스크립트 오류 없음", not browser.script_errors, browser.script_errors)
         finally:
             server.terminate()

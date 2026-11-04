@@ -76,7 +76,7 @@ class AuthPagesTest(AuthTestCase):
     def test_words_page_requires_login(self):
         response = self.client.get("/words", follow_redirects=False)
         self.assertEqual(response.status_code, 303)
-        self.assertEqual(response.headers["location"], "/login")
+        self.assertEqual(response.headers["location"], "/login?next=%2Fwords")
 
     def test_words_page_has_core_elements_without_inline_code(self):
         self.verified_member()

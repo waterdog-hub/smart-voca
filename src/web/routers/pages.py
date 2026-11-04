@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, 임시 홈, W-01~W-03, S-01)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, H-01, W-01~W-03, M-01, M-02, S-01)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
+from urllib.parse import urlencode
 
+from config import ASSIGNED_TYPE_LABELS
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from web.dependencies import OptionalSession
+from web.dependencies import DbSession, OptionalSession
+from web.repositories import plan_repository
+from web.services.plan_service import PlanService
 from web.services.setting_service import COUNT_FIELDS, DIRECTION_CHOICES, FORMAT_CHOICES
 
 router = APIRouter(include_in_schema=False)
@@ -18,6 +22,23 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "
 
 def _render(request: Request, template_name: str, **context: object) -> Response:
     return templates.TemplateResponse(request, template_name, context)
+
+
+def _login_redirect(request: Request) -> Response:
+    # 로그인 뒤 돌아올 주소를 남긴다 (화면 설계 §5.3). 주소 검사는 이동하는 쪽(auth.js)에서 한다
+    path = request.url.path
+    if request.url.query:
+        path = f"{path}?{request.url.query}"
+    target = "/login" if path == "/" else f"/login?{urlencode({'next': path})}"
+    return RedirectResponse(target, status_code=303)
+
+
+def _selected_day(raw_day: str | None, days: list[tuple[int, int, int]], current_day: int) -> int:
+    # 주소를 손으로 고쳐 없는 일차가 와도 오류 대신 현재 일차를 보여 준다
+    if raw_day and raw_day.isascii() and raw_day.isdigit() and len(raw_day) < 10:
+        if any(summary[0] == int(raw_day) for summary in days):
+            return int(raw_day)
+    return current_day
 
 
 def _render_member_page(
@@ -29,7 +50,7 @@ def _render_member_page(
     **context: object,
 ) -> Response:
     if current is None:
-        return RedirectResponse("/login", status_code=303)
+        return _login_redirect(request)
     response = _render(
         request,
         template_name,
@@ -45,9 +66,57 @@ def _render_member_page(
 
 
 @router.get("/")
-def home(request: Request, current: OptionalSession) -> Response:
-    # H-01은 M5에서 만든다. 그때까지 로그인 결과를 확인하는 임시 화면이다 (이슈 #9)
-    return _render_member_page(request, current, "home_temporary.html", "홈", "home")
+def home(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    progress = PlanService(db, current.user.id).progress() if current else None
+    return _render_member_page(request, current, "home.html", "홈", "home", progress=progress)
+
+
+@router.get("/memorize")
+def memorize_page(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    service = PlanService(db, current.user.id)
+    current_day = service.current_day()
+    days = service.list_days()
+    selected_day = _selected_day(request.query_params.get("day"), days, current_day)
+    return _render_member_page(
+        request,
+        current,
+        "memorize.html",
+        "암기",
+        "memorize",
+        days=days,
+        current_day=current_day,
+        selected_day=selected_day,
+    )
+
+
+@router.get("/plans")
+def plans_page(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    service = PlanService(db, current.user.id)
+    days = service.list_days()
+    selected_day = _selected_day(request.query_params.get("day"), days, service.current_day())
+    rows = [
+        {
+            "word": word.word,
+            "meaning": word.meaning,
+            "type_label": ASSIGNED_TYPE_LABELS[item.assigned_type],
+            "done": item.done,
+        }
+        for item, word in plan_repository.list_day_items(db, current.user.id, selected_day)
+    ]
+    return _render_member_page(
+        request,
+        current,
+        "plans.html",
+        "일차별 진도",
+        "memorize",
+        days=days,
+        selected_day=selected_day,
+        rows=rows,
+    )
 
 
 @router.get("/words")

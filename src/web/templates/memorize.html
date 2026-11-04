@@ -1,0 +1,57 @@
+{# 2026-11-04 - smart-voca - M-01 암기 (화면 설계 §4.2). 파일 위치: src/web/templates/memorize.html #}
+{% extends "member_base.html" %}
+{% block scripts %}
+<script src="/static/plans.js" defer></script>
+<script src="/static/memorize.js" defer></script>
+{% endblock %}
+{% block member_content %}
+{% if not days %}
+<section class="result-panel">
+  <p id="memorize-empty">아직 진도가 없습니다. 홈에서 일차를 만들어 시작하세요.</p>
+  <a class="button-link" href="/">홈으로 가기</a>
+</section>
+{% else %}
+<div class="memorize-toolbar">
+  <form id="day-form" method="get" action="/memorize" class="field">
+    <label for="day-select">일차</label>
+    <select id="day-select" name="day">
+      {% for summary in days %}
+      <option value="{{ summary[0] }}" {% if summary[0] == selected_day %}selected{% endif %}>{{ summary[0] }}일차{% if summary[0] == current_day %} (현재){% endif %}</option>
+      {% endfor %}
+    </select>
+  </form>
+  <a href="/plans?day={{ selected_day }}">일차별 진도 보기</a>
+</div>
+{% if selected_day != current_day %}
+<p class="banner" id="review-notice">지난 일차를 복습합니다. 외움과 다시를 눌러도 기록은 바뀌지 않습니다.</p>
+{% endif %}
+<div id="memorize-app" data-day="{{ selected_day }}" data-is-current="{{ 'true' if selected_day == current_day else 'false' }}">
+  <p class="help" id="memorize-progress-text" aria-live="polite"></p>
+  <progress id="memorize-progress" max="1" value="0" aria-label="이 일차 진행률"></progress>
+
+  <section id="memorize-card" class="memorize-card" tabindex="-1" aria-live="polite" hidden>
+    <p id="card-word" class="card-word"></p>
+    <p id="card-meaning" class="card-meaning" hidden></p>
+    <button type="button" id="show-meaning" class="secondary">뜻 보기 (↑ / Space)</button>
+  </section>
+  <div id="card-actions" class="form-actions" hidden>
+    <button type="button" id="again-button" class="secondary">다시 (← / 2)</button>
+    <button type="button" id="remember-button">외움 (→ / 1)</button>
+  </div>
+  <p class="help" id="key-help" hidden>단축키: 뜻 보기 ↑ 또는 Space, 외움 → 또는 1, 다시 ← 또는 2</p>
+
+  <section id="memorize-summary" class="result-panel" aria-labelledby="summary-title" hidden>
+    <h2 id="summary-title">이 일차를 마쳤습니다</h2>
+    <p id="summary-text"></p>
+    {% if selected_day == current_day %}
+    <button type="button" data-create-plan class="needs-verified">다음 일차 만들기</button>
+    {% else %}
+    <div class="button-row">
+      <a class="button-link" href="/memorize?day={{ selected_day }}">처음부터 다시</a>
+      <a class="button-link" href="/memorize">현재 일차로</a>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}

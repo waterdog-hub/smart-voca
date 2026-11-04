@@ -154,6 +154,12 @@ class Browser:
     def text(self, element_id: str) -> str:
         return self.js(f"document.getElementById('{element_id}').textContent") or ""
 
+    def press(self, key: str, code: str, windows_key: int, text: str = "") -> None:
+        # 사람이 누른 것과 같은 키 이벤트를 보낸다. 포커스된 버튼의 기본 동작까지 함께 확인된다
+        common = {"key": key, "code": code, "windowsVirtualKeyCode": windows_key}
+        self.call("Input.dispatchKeyEvent", type="keyDown", text=text, **common)
+        self.call("Input.dispatchKeyEvent", type="keyUp", **common)
+
     def upload(self, element_id: str, path: Path) -> None:
         root = self.call("DOM.getDocument")["root"]["nodeId"]
         node = self.call("DOM.querySelector", nodeId=root, selector=f"#{element_id}")["nodeId"]
@@ -171,6 +177,8 @@ class Report:
 
 
 class Session:
+    password = TEST_PASSWORD
+
     """한 번의 점검에 필요한 서버 주소, 브라우저, 결과, 메일 로그를 묶는다."""
 
     def __init__(self, base_url: str, browser: Browser, report: Report, log_path: Path) -> None:

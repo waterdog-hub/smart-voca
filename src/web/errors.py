@@ -24,6 +24,7 @@ class ApiError(Exception):
         message: str,
         fields: dict[str, str] | None = None,
         retry_after: int | None = None,
+        reason: str | None = None,
     ) -> None:
         super().__init__(code)
         self.status_code = status_code
@@ -31,6 +32,7 @@ class ApiError(Exception):
         self.message = message
         self.fields = fields
         self.retry_after = retry_after
+        self.reason = reason
 
 
 def error_response(error: ApiError) -> JSONResponse:
@@ -38,6 +40,8 @@ def error_response(error: ApiError) -> JSONResponse:
     headers = {}
     if error.fields:
         body["fields"] = error.fields
+    if error.reason:
+        body["reason"] = error.reason
     if error.retry_after is not None:
         body["retry_after"] = error.retry_after
         headers["Retry-After"] = str(error.retry_after)

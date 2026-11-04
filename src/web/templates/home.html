@@ -1,0 +1,30 @@
+{# 2026-11-04 - smart-voca - H-01 홈. 서버가 그리고 일차 생성만 자바스크립트로 호출한다 (D-UI05). 최근 시험은 M6에서 추가한다. 파일 위치: src/web/templates/home.html #}
+{% extends "member_base.html" %}
+{% block scripts %}<script src="/static/plans.js" defer></script>{% endblock %}
+{% block member_content %}
+<section class="result-panel" aria-labelledby="today-title">
+  <h2 id="today-title">오늘 할 일</h2>
+  {% if progress.total_words == 0 %}
+  <p id="home-state" data-state="no-words">단어장부터 만드세요. 단어를 추가하거나 CSV 파일을 가져올 수 있습니다.</p>
+  <a class="button-link" href="/words">단어장으로 가기</a>
+  {% elif not progress.day_complete %}
+  <p id="home-state" data-state="in-progress">{{ progress.current_day }}일차를 외우는 중입니다. {{ progress.day_total }}개 중 {{ progress.day_done }}개를 외웠습니다.</p>
+  <progress max="{{ progress.day_total }}" value="{{ progress.day_done }}" aria-label="현재 일차 진행률"></progress>
+  <a class="button-link" id="continue-link" href="/memorize">이어서 암기하기</a>
+  {% else %}
+  {% if progress.current_day == 0 %}
+  <p id="home-state" data-state="ready">아직 진도가 없습니다. 첫 일차를 만들어 시작하세요.</p>
+  {% else %}
+  <p id="home-state" data-state="ready">{{ progress.current_day }}일차를 모두 외웠습니다.</p>
+  {% endif %}
+  <button type="button" data-create-plan class="needs-verified">다음 일차 만들기</button>
+  {% endif %}
+</section>
+<section class="result-panel" aria-labelledby="overall-title">
+  <h2 id="overall-title">전체 진행률</h2>
+  <p id="overall-progress">전체 {{ progress.total_words }}개 중 {{ progress.memorized_words }}개를 외웠습니다.</p>
+  {% if progress.total_words %}
+  <progress max="{{ progress.total_words }}" value="{{ progress.memorized_words }}" aria-label="전체 진행률"></progress>
+  {% endif %}
+</section>
+{% endblock %}

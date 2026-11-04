@@ -44,7 +44,7 @@ async function loadWords() {
   if (requestNumber !== wordState.requestNumber) return;
   byId("word-table-area").setAttribute("aria-busy", "false");
   if (result.status === 401) {
-    window.location.assign("/login");
+    goToLogin();
     return;
   }
   if (!result.ok) {
@@ -153,10 +153,17 @@ function showWordFieldErrors(fields, prefix) {
     if (!element) continue;
     element.textContent = text;
     element.hidden = false;
+    const input = element.closest(".field").querySelector("input");
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-errormessage", element.id);
   }
 }
 
 function clearWordFieldErrors(form) {
+  form.querySelectorAll("[aria-invalid]").forEach((input) => {
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-errormessage");
+  });
   form.querySelectorAll(".field-error").forEach((element) => {
     element.textContent = "";
     element.hidden = true;
@@ -247,8 +254,12 @@ function setupDelete() {
     if (!requireVerified()) return;
     const count = wordState.selected.size;
     if (!window.confirm(`선택한 단어 ${count}개를 삭제할까요? 진도에서도 빠집니다.`)) return;
+    const deleteButton = byId("delete-selected");
+    // 응답 전에 다시 누르면 삭제 개수 안내가 틀어지므로 막는다 (화면 설계 §6)
+    deleteButton.disabled = true;
     const result = await writeJson(`${WORDS_API}/delete`, "POST", { ids: [...wordState.selected] });
     if (result === null) return;
+    deleteButton.disabled = false;
     if (!result.ok) {
       showMessage(describeError(result.error), "error");
       return;

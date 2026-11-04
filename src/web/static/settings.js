@@ -87,7 +87,7 @@ async function startSettingsPage() {
 
   const result = await requestJson(SETTINGS_API, { method: "GET" });
   if (result.status === 401) {
-    window.location.assign("/login");
+    goToLogin();
     return;
   }
   if (!result.ok) {

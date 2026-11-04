@@ -44,6 +44,9 @@ a { color: var(--accent); }
   border-radius: 8px;
 }
 
+/* display를 지정한 요소에서도 hidden 속성이 항상 이기게 한다 */
+[hidden] { display: none !important; }
+
 h1 { margin: 0 0 16px; font-size: 1.5rem; }
 
 .field { margin-bottom: 16px; }
@@ -133,6 +136,20 @@ button:disabled { opacity: 0.6; cursor: default; }
 .member-nav-user span { display: block; margin-bottom: 8px; overflow-wrap: anywhere; }
 .member-main { min-width: 0; padding: 24px; }
 button[aria-disabled="true"] { opacity: 0.6; }
+
+/* 홈과 암기 (화면 설계 §4.2) */
+progress { display: block; width: 100%; height: 10px; margin: 8px 0 16px; }
+.memorize-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.memorize-toolbar .field { margin: 0; min-width: 160px; }
+.memorize-card { padding: 32px 16px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.memorize-card:focus { outline: none; }
+.card-word { margin: 0 0 16px; font-size: 2rem; font-weight: 700; overflow-wrap: anywhere; }
+.card-meaning { margin: 0; font-size: 1.25rem; overflow-wrap: anywhere; }
+#card-actions button { flex: 1 1 0; width: auto; }
+.table-scroll { overflow-x: auto; }
+.plan-table { width: 100%; border-collapse: collapse; background: var(--surface); }
+.plan-table th, .plan-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.plan-table th:nth-child(n+3), .plan-table td:nth-child(n+3) { white-space: nowrap; }
 
 /* 설정 (화면 설계 §4.5) */
 .settings-form { max-width: 420px; }

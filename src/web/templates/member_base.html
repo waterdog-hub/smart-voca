@@ -5,6 +5,7 @@
   <nav class="member-nav" aria-label="주 메뉴">
     <a href="/" {% if page == "home" %}aria-current="page"{% endif %}>홈</a>
     <a href="/words" {% if page == "words" %}aria-current="page"{% endif %}>단어장</a>
+    <a href="/memorize" {% if page == "memorize" %}aria-current="page"{% endif %}>암기</a>
     <a href="/settings" {% if page == "settings" %}aria-current="page"{% endif %}>설정</a>
     <div class="member-nav-user">
       <span>{{ display_name }} 님</span>

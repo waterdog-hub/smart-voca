@@ -240,7 +240,7 @@ class SettingsPageTest(AuthTestCase):
     def test_page_requires_login(self):
         response = self.client.get("/settings", follow_redirects=False)
         self.assertEqual(response.status_code, 303)
-        self.assertEqual(response.headers["location"], "/login")
+        self.assertEqual(response.headers["location"], "/login?next=%2Fsettings")
 
     def test_page_has_labeled_fields_and_rules_without_inline_code(self):
         self.signup_and_login()
@@ -266,7 +266,7 @@ class SettingsPageTest(AuthTestCase):
 
     def test_menu_links_to_settings_on_member_pages(self):
         self.signup_and_login()
-        for path in ("/", "/words", "/settings"):
+        for path in ("/", "/words", "/memorize", "/plans", "/settings"):
             with self.subTest(path=path):
                 self.assertIn('href="/settings"', self.client.get(path).text)
         self.assertIn(

@@ -33,11 +33,29 @@ function callApi(path, options) {
   return requestJson(`${API_BASE}${path}`, options);
 }
 
+// 세션이 끝나면 로그인 뒤 지금 화면으로 돌아오게 한다 (화면 설계 §5.3)
+function goToLogin() {
+  const here = window.location.pathname + window.location.search;
+  window.location.assign(`/login?${new URLSearchParams({ next: here })}`);
+}
+
+// 다른 사이트로 보내는 데 악용되지 않도록 같은 사이트 주소만 따른다. 주소 판별은 브라우저 파서에 맡긴다
+function nextPathAfterLogin() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (!next) return "/";
+  try {
+    const target = new URL(next, window.location.origin);
+    return target.origin === window.location.origin ? target.pathname + target.search : "/";
+  } catch {
+    return "/";
+  }
+}
+
 // 쿠키만으로 요청이 위조되지 않도록 쓰기 요청마다 세션의 CSRF 토큰을 함께 보낸다
 async function sendWithSession(url, options) {
   const session = await callApi("/session", { method: "GET" });
   if (!session.ok || !session.data?.user) {
-    window.location.assign("/login");
+    goToLogin();
     return null;
   }
   return requestJson(url, { ...options, csrfToken: session.data.csrf_token });
@@ -129,7 +147,7 @@ async function submitLogin(form) {
   const result = await callApi("/login", {
     body: { email: form.elements.email.value, password: form.elements.password.value },
   });
-  if (result.ok) window.location.assign("/");
+  if (result.ok) window.location.assign(nextPathAfterLogin());
   return result;
 }
 
