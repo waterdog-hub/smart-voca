@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - 웹 서비스 테이블 12개를 정의한다 (데이터 모델 v0.3)
+# 2026-11-04 - smart-voca - 웹 서비스 테이블 12개를 정의한다 (docs/web 데이터 모델 문서 기준)
 # 파일 위치: src/web/db/tables.py
 
 from datetime import date, datetime
