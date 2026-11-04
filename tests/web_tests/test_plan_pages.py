@@ -14,7 +14,6 @@ class PlanPagesTest(PlansTestCase):
         for path, expected in (
             ("/memorize", "/login?next=%2Fmemorize"),
             ("/plans?day=2", "/login?next=%2Fplans%3Fday%3D2"),
-            ("/", "/login"),
         ):
             with self.subTest(path=path):
                 response = anonymous.get(path, follow_redirects=False)

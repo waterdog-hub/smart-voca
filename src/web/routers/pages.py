@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, H-01, W-01~W-03, M-01, M-02, T-01~T-03, R-01, S-01)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-01~P-05, H-01, W-01~W-03, M-01, M-02, T-01~T-03, R-01, S-01)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
@@ -30,6 +30,7 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "
 
 
 def _render(request: Request, template_name: str, **context: object) -> Response:
+    context["demo_mode"] = request.app.state.settings.auto_verifies_email
     return templates.TemplateResponse(request, template_name, context)
 
 
@@ -94,7 +95,7 @@ def _render_member_page(
 @router.get("/")
 def home(request: Request, current: OptionalSession, db: DbSession) -> Response:
     if current is None:
-        return _login_redirect(request)
+        return _render(request, "landing.html", title="smart-voca 시작하기", page="landing")
     latest = test_repository.list_sessions(db, current.user.id, limit=1, offset=0)
     return _render_member_page(
         request,
@@ -268,7 +269,8 @@ def signup_page(request: Request, current: OptionalSession) -> Response:
 
 @router.get("/signup/sent")
 def signup_sent_page(request: Request) -> Response:
-    return _render(request, "signup_sent.html", title="인증 메일 안내", page="signup-sent")
+    title = "가입 안내" if request.app.state.settings.auto_verifies_email else "인증 메일 안내"
+    return _render(request, "signup_sent.html", title=title, page="signup-sent")
 
 
 @router.get("/verify-email")

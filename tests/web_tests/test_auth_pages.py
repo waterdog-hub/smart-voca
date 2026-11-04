@@ -44,11 +44,6 @@ class AuthPagesTest(AuthTestCase):
         self.assertEqual(self.client.get("/static/auth.js").status_code, 200)
         self.assertEqual(self.client.get("/static/app.css").status_code, 200)
 
-    def test_home_redirects_to_login_when_anonymous(self):
-        response = self.client.get("/", follow_redirects=False)
-        self.assertEqual(response.status_code, 303)
-        self.assertEqual(response.headers["location"], "/login")
-
     def test_login_and_signup_redirect_home_when_logged_in(self):
         self.signup_and_login()
         for path in ("/login", "/signup"):

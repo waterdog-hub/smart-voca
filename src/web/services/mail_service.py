@@ -42,8 +42,17 @@ class UnconfiguredMailer:
         raise MailSendError("메일 발송 업체가 설정되지 않았습니다.")
 
 
+class DiscardingMailer:
+    """시연용 구현. 자동 인증이라 보낼 메일이 없다. 터널로 열린 서버의 콘솔에 내용을 남기지 않는다."""
+
+    def send(self, message: MailMessage) -> None:
+        return None
+
+
 def create_mailer(settings: Settings) -> Mailer:
-    return UnconfiguredMailer() if settings.is_production else ConsoleMailer()
+    if settings.is_production:
+        return UnconfiguredMailer()
+    return DiscardingMailer() if settings.auto_verifies_email else ConsoleMailer()
 
 
 def build_verification_message(recipient: str, public_base_url: str, token: str) -> MailMessage:

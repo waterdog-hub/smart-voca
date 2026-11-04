@@ -11,6 +11,7 @@
 </head>
 <body>
   <header class="site-header"><a href="/">smart-voca</a></header>
+  {% if demo_mode %}<p class="demo-notice" id="demo-notice">시연용 서버입니다. 실제 비밀번호와 개인정보를 쓰지 마세요. 입력한 내용은 시연이 끝나면 지웁니다.</p>{% endif %}
   {% block body %}
   <main class="panel" data-page="{{ page }}">
     <h1>{{ title }}</h1>

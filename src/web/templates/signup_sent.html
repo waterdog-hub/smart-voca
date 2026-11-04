@@ -1,7 +1,11 @@
 {# 2026-11-04 - smart-voca - P-04 인증 메일 안내. 재발송은 로그인 후 안내 띠에서 한다 (이슈 #9). 파일 위치: src/web/templates/signup_sent.html #}
 {% extends "base.html" %}
 {% block content %}
+{% if demo_mode %}
+<p>가입 요청을 처리했습니다. 로그인해서 시작해 주세요.</p>
+{% else %}
 <p>입력한 이메일로 안내 메일을 보냈습니다. 메일의 링크를 눌러 인증을 완료해 주세요.</p>
 <p>메일이 오지 않았다면 스팸함을 확인하거나, 로그인한 뒤 인증 메일을 다시 받을 수 있습니다.</p>
+{% endif %}
 <p class="links"><a href="/login">로그인 화면으로 이동</a></p>
 {% endblock %}

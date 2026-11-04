@@ -64,7 +64,7 @@ class WebTestCase(unittest.TestCase):
     def make_client(self, app_env="local", mailer=None, ip="testclient"):
         app = create_app(self.make_settings(app_env), mailer=mailer)
         # 운영 쿠키에는 Secure가 붙어 https 주소로만 전송된다
-        base_url = "https://testserver" if app_env == "production" else "http://testserver"
+        base_url = "http://testserver" if app_env == "local" else "https://testserver"
         client = TestClient(app, base_url=base_url, client=(ip, 50000))
         # with 문과 같은 동작이다. 앱 시작·종료 처리를 실행해 DB 연결을 닫는다
         client.__enter__()

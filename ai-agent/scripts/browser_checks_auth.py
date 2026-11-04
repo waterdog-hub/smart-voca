@@ -13,7 +13,9 @@ def check_auth_flow(session: Session) -> None:
     browser.resize(PHONE_WIDTH, 720, mobile=True)
 
     browser.go(f"{base}/")
-    check("로그인 없이 홈을 열면 로그인 화면으로 이동", browser.js("location.pathname") == "/login")
+    check("로그인 없이 홈을 열면 시작 화면 표시", browser.js("document.querySelector('main').dataset.page") == "landing")
+    check("시작 화면에 가입과 로그인 링크", browser.js("!!document.getElementById('landing-signup') && !!document.getElementById('landing-login')"))
+    check("개발 환경에는 시연 안내가 없음", browser.js("!document.getElementById('demo-notice')"))
 
     browser.go(f"{base}/signup")
     browser.fill(
@@ -80,5 +82,5 @@ def check_auth_flow(session: Session) -> None:
     browser.go(f"{base}/")
     check("인증 후 안내 띠 사라짐", browser.js("!document.getElementById('verify-banner')"))
     check("로그아웃 후 로그인 화면으로 이동", session.log_out())
-    browser.go(f"{base}/")
+    browser.go(f"{base}/words")
     check("로그아웃 후 회원 화면 차단", browser.js("location.pathname") == "/login")

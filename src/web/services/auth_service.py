@@ -154,11 +154,12 @@ class AuthService:
         password_hash = passwords.hash_password(password)
         message = self._create_account_or_notice(email, password_hash, display_name, now)
         # 메일 실패를 응답으로 알리면 신규와 중복의 차이가 생길 수 있어 로그에만 남긴다 (D-A04)
-        self._try_send(message)
+        if message is not None:
+            self._try_send(message)
 
     def _create_account_or_notice(
         self, email: str, password_hash: str, display_name: str, now: datetime
-    ) -> MailMessage:
+    ) -> MailMessage | None:
         notice = build_already_registered_message(email, self.settings.public_base_url)
         if auth_repository.get_user_by_email(self.db, email) is not None:
             logger.info("가입 요청: 이미 가입된 이메일")
@@ -167,7 +168,12 @@ class AuthService:
             user = auth_repository.add_user_with_settings(
                 self.db, email, password_hash, display_name, now
             )
-            message = self._issue_verification_mail(user.id, email, now)
+            if self.settings.auto_verifies_email:
+                # 시연 전용이다. 가입 응답과 자동 로그인 금지는 그대로 둔다 (이슈 #11, D-A04)
+                user.email_verified_at = now
+                message = None
+            else:
+                message = self._issue_verification_mail(user.id, email, now)
             self.db.commit()
         except IntegrityError:
             # 같은 이메일의 가입이 동시에 들어오면 유일 제약이 한쪽을 막는다

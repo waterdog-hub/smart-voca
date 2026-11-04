@@ -31,8 +31,8 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     # uvicorn --factory로 실행한다. import만으로 설정을 읽지 않아 .env 없는 환경에서도 import할 수 있다
     app_settings = settings if settings is not None else Settings()
 
-    if app_settings.is_production:
-        # 운영에서는 API 구조를 공개하지 않는다 (D-API07)
+    if app_settings.is_public:
+        # 인터넷에 열리는 환경에서는 API 구조를 공개하지 않는다 (D-API07, NFR-DEMO-03)
         app = FastAPI(
             title="smart-voca", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
         )
