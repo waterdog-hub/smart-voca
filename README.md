@@ -77,6 +77,7 @@ Windows에서 Python 3.15가 설치되어 있어야 합니다.
 - 화면 흐름 테스트 (`tests/test_gui_flow.py`): 8개
 - 웹 테스트 (`tests/web_tests/`): 188개
 - 합계 247개
+- 화면 동작은 실제 브라우저로 따로 점검합니다 (Chrome 또는 Edge 필요): `.venv\Scripts\python ai-agent/scripts/browser_check.py`
 - 테스트는 임시 폴더를 쓰므로 `data/` 파일을 바꾸지 않습니다. 화면을 띄울 수 없는 환경에서는 화면 테스트가 건너뛰어집니다.
 
 ## 사용 방법
@@ -147,7 +148,8 @@ smart-voca/
 
 ## 문서
 
-- 기획서: [docs/기획_261028_smart-voca 기획서 v0.10.md](docs/기획_261028_smart-voca%20기획서%20v0.10.md)
+- 기획서: [docs/기획_261104_smart-voca 기획서 v0.11.md](docs/기획_261104_smart-voca%20기획서%20v0.11.md)
 - 설계서: [docs/설계_261028_smart-voca 설계서 v0.7.md](docs/설계_261028_smart-voca%20설계서%20v0.7.md)
-- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.6.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.6.md)
+- 웹 요구사항 명세: [docs/web/분석_261104_웹 요구사항 명세 v0.1.md](docs/web/분석_261104_웹%20요구사항%20명세%20v0.1.md)
+- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.7.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.7.md)
 - 상위 방법론: [docs/개발방법론.md](docs/개발방법론.md)
