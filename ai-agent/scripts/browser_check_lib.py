@@ -24,6 +24,9 @@ BROWSER_CANDIDATES = (
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
 )
 TEST_PASSWORD = "correct horse battery staple"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PHONE_WIDTH = 375
+DESKTOP_WIDTH = 1280
 
 
 class WebSocketClient:
