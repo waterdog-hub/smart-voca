@@ -321,7 +321,7 @@ def _error_visible(browser: Browser, name: str) -> bool:
 
 
 def check_settings_flow(session: Session) -> None:
-    """설정 (테스트 정의서 §4.3)."""
+    """설정 (테스트 정의서 §4.5)."""
     browser, check, base = session.browser, session.report.check, session.base
     email = "browser-settings@example.com"
     browser.resize(DESKTOP_WIDTH, 900, mobile=False)
