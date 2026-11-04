@@ -1,7 +1,7 @@
 # smart-voca
 
 **프로젝트명**: smart-voca
-**상태**: 데스크톱 앱 구현 완료 (화면 확인 및 자동 테스트 통과). 웹 서비스로 전환하는 중이며, 지금은 웹 뼈대와 상태 확인 API만 있습니다 (M0 완료)
+**상태**: 데스크톱 앱 구현 완료 (화면 확인 및 자동 테스트 통과). 웹 서비스로 전환하는 중이며, 지금은 DB 테이블과 상태 확인 API만 있습니다 (M1 완료)
 **성격**: ICT 폴리텍대학 AI 활용 코딩 실습 과제
 
 ## 한 줄 설명
@@ -51,13 +51,17 @@ Windows에서 Python 3.15가 설치되어 있어야 합니다.
    py -3 -m venv .venv
    .venv\Scripts\python -m pip install -r requirements-dev.txt
    ```
-2. 설정 파일을 복사합니다. `.env`가 없으면 운영 모드로 동작해 API 문서(`/docs`)가 꺼집니다.
+2. 설정 파일을 복사합니다. `DATABASE_URL`이 없으면 앱이 시작되지 않습니다.
    ```
    copy .env.example .env
    ```
-3. 서버를 실행하고 `http://127.0.0.1:8000/healthz`를 엽니다.
+3. DB를 만듭니다.
    ```
-   .venv\Scripts\python -m uvicorn web.app:app --app-dir src --reload
+   .venv\Scripts\python -m alembic upgrade head
+   ```
+4. 서버를 실행하고 `http://127.0.0.1:8000/healthz`를 엽니다.
+   ```
+   .venv\Scripts\python -m uvicorn --factory web.app:create_app --app-dir src --reload
    ```
 
 ## 테스트
@@ -70,8 +74,8 @@ Windows에서 Python 3.15가 설치되어 있어야 합니다.
 
 - 단위 테스트 (핵심 로직, 저장소, 파일 저장과 백업): 51개
 - 화면 흐름 테스트 (`tests/test_gui_flow.py`): 8개
-- 웹 테스트 (`tests/web_tests/`): 4개
-- 합계 63개
+- 웹 테스트 (`tests/web_tests/`): 30개
+- 합계 89개
 - 테스트는 임시 폴더를 쓰므로 `data/` 파일을 바꾸지 않습니다. 화면을 띄울 수 없는 환경에서는 화면 테스트가 건너뛰어집니다.
 
 ## 사용 방법
@@ -120,6 +124,7 @@ smart-voca/
 ├── requirements.txt          # 웹 서비스 운영 패키지
 ├── requirements-dev.txt      # 개발·테스트 패키지
 ├── .env.example              # 환경변수 예시
+├── alembic.ini               # DB 마이그레이션 설정
 ├── docs/                     # 승인된 산출물 (기획서, 설계서, 개발방법론)
 │   ├── web/                  # 웹 전환 설계 문서와 구현 계획
 │   └── old/                  # 이전 버전 보관
@@ -143,5 +148,5 @@ smart-voca/
 
 - 기획서: [docs/기획_261028_smart-voca 기획서 v0.10.md](docs/기획_261028_smart-voca%20기획서%20v0.10.md)
 - 설계서: [docs/설계_261028_smart-voca 설계서 v0.7.md](docs/설계_261028_smart-voca%20설계서%20v0.7.md)
-- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.2.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.2.md)
+- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.3.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.3.md)
 - 상위 방법론: [docs/개발방법론.md](docs/개발방법론.md)

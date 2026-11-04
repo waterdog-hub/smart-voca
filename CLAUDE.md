@@ -11,7 +11,7 @@
 - **한 줄 설명**: 영어 단어 암기와 시험을 돕는 Windows 학습 프로그램 (진도 관리, 객관식·주관식 시험, 오답 복습)
 - **작성자**: `260322 은형주`
 - **리포지토리**: `https://github.com/waterdog-hub/smart-voca`
-- **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M0 완료, 2026-11-04). 일정·제출 형식 미정
+- **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M1 완료, 2026-11-04). 일정·제출 형식 미정
 
 ### 기술 스택
 
@@ -97,7 +97,9 @@ smart-voca/
 - 처음 준비 (프로젝트 루트에서): `py -3 -m venv .venv` 후 `.venv\Scripts\python -m pip install -r requirements-dev.txt`
 - 테스트 실행 (프로젝트 루트에서): `.venv\Scripts\python -m unittest discover -s tests`
   - 시스템 Python(`py -3`)에는 웹 패키지가 없어 웹 테스트가 실패한다.
-- 웹 실행: `.venv\Scripts\python -m uvicorn web.app:app --app-dir src --reload` (`.env`가 없으면 `APP_ENV=production`으로 동작한다)
+- 웹 준비: `.env.example`을 `.env`로 복사한 뒤 `.venv\Scripts\python -m alembic upgrade head`로 DB를 만든다. `DATABASE_URL`이 없으면 앱이 시작되지 않는다.
+- 웹 실행: `.venv\Scripts\python -m uvicorn --factory web.app:create_app --app-dir src --reload`
+- 테이블 변경: `src/web/db/tables.py`를 고치고 `.venv\Scripts\python -m alembic revision --autogenerate -m "영문 설명"`으로 마이그레이션을 만든다. 운영 DB를 손으로 고치지 않는다.
 - 데스크톱 앱 실행: `py -3 src/main.py` (별도 빌드 없음)
 - 개발은 호스트에서 직접 실행한다. 운영 배포만 컨테이너를 쓴다 (배포·운영 설계 D-OP02, M10).
 - 데이터 파일은 `data/`에 생성되며, 실행 중 학습 기록이 바뀐다. 테스트는 임시 폴더를 쓴다.
@@ -283,6 +285,8 @@ smart-voca/
 - **Python 실행 명령**: 이 PC에서는 `python`이 동작하지 않는다 (종료 코드 9009). 웹 작업과 테스트는 `.venv\Scripts\python`, 가상환경을 만들 때와 데스크톱 앱 실행은 `py -3`을 쓴다. 설치된 버전은 3.15.2다.
 - **테스트 실행 위치**: 프로젝트 루트에서 `.venv\Scripts\python -m unittest discover -s tests`만 쓴다. `-t .` 옵션을 붙이면 import 오류가 난다.
 - **웹 테스트 폴더 이름**: `tests/web_tests/`를 쓴다. `tests/web/`으로 하면 `src/web/`과 패키지 이름이 겹쳐 import 오류가 난다 (구현 계획 D-IMP06).
+- **`alembic.ini`는 영문만**: Alembic이 시스템 인코딩으로 읽어, 한글을 넣으면 한글 Windows에서 `UnicodeDecodeError`가 난다.
+- **CHECK 제약 변경**: `alembic check`와 자동 생성은 CHECK 변경을 감지하지 않는다. 고칠 때는 마이그레이션을 직접 작성한다.
 - **테스트 경고**: `httpx`를 쓰면 Starlette 테스트 클라이언트가 `httpx2` 권장 경고를 낸다. 테스트 결과에는 영향이 없다. 설계에서 정한 `httpx`를 유지하고 있다.
 - **콘솔 한글 깨짐**: Windows 콘솔(cp949)에서 한글이 깨져 보여도 데이터 문제가 아니다. CSV 파일은 `utf-8-sig`로 저장된다.
 - **실행 중 데이터 변경**: 앱을 조작하면 `data/`의 CSV(설정, 학습 기록, 일차 진도)가 바뀐다. 테스트는 임시 폴더를 쓰므로 `data/`를 건드리지 않는다.
