@@ -6,6 +6,7 @@
 const API_BASE = "/api/v1/auth";
 const NETWORK_ERROR = { code: "NETWORK", message: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요." };
 const UNKNOWN_ERROR = { code: "UNKNOWN", message: "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." };
+const NOT_VERIFIED_MESSAGE = "이메일 인증이 필요합니다. 메일의 링크를 먼저 눌러 주세요.";
 
 async function requestJson(url, { method = "POST", body, formData, csrfToken } = {}) {
   const headers = {};
@@ -52,6 +53,16 @@ function writeJson(url, method, body) {
 
 function writeForm(url, formData) {
   return sendWithSession(url, { method: "POST", formData });
+}
+
+function isVerified() {
+  return document.querySelector("main").dataset.emailVerified === "true";
+}
+
+function requireVerified() {
+  if (isVerified()) return true;
+  showMessage(NOT_VERIFIED_MESSAGE, "error");
+  return false;
 }
 
 function showMessage(text, kind) {

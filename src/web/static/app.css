@@ -50,14 +50,17 @@ h1 { margin: 0 0 16px; font-size: 1.5rem; }
 .field > label { display: block; margin-bottom: 4px; font-weight: 600; }
 .field input[type="email"],
 .field input[type="password"],
-.field input[type="text"] {
+.field input[type="text"],
+.field input[type="number"],
+.field select {
   width: 100%;
   padding: 10px;
   font: inherit;
   border: 1px solid var(--line);
   border-radius: 6px;
 }
-.field input[aria-invalid="true"] { border: 2px solid var(--error); }
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"] { border: 2px solid var(--error); }
 
 .field.check { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: start; }
 .field.check > label { margin: 0; font-weight: 400; }
@@ -130,6 +133,11 @@ button:disabled { opacity: 0.6; cursor: default; }
 .member-nav-user span { display: block; margin-bottom: 8px; overflow-wrap: anywhere; }
 .member-main { min-width: 0; padding: 24px; }
 button[aria-disabled="true"] { opacity: 0.6; }
+
+/* 설정 (화면 설계 §4.5) */
+.settings-form { max-width: 420px; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.form-actions button { flex: 1 1 0; width: auto; }
 
 /* 단어장 (화면 설계 §4.3) */
 .words-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }

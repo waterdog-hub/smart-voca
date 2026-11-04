@@ -7,7 +7,6 @@
 const WORDS_API = "/api/v1/words";
 const PAGE_SIZE = 50;
 const SEARCH_DELAY_MS = 300;
-const NOT_VERIFIED_MESSAGE = "이메일 인증이 필요합니다. 메일의 링크를 먼저 눌러 주세요.";
 
 const wordState = {
   keyword: "",
@@ -21,10 +20,6 @@ const wordState = {
   requestNumber: 0,
 };
 
-function isVerified() {
-  return document.querySelector("main").dataset.emailVerified === "true";
-}
-
 function byId(id) {
   return document.getElementById(id);
 }
@@ -32,12 +27,6 @@ function byId(id) {
 function formatDate(isoText) {
   // 서버는 UTC로 보내고 화면은 한국 시간으로 보여 준다 (API 설계 §1)
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date(isoText));
-}
-
-function requireVerified() {
-  if (isVerified()) return true;
-  showMessage(NOT_VERIFIED_MESSAGE, "error");
-  return false;
 }
 
 async function loadWords() {

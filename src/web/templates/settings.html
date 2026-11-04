@@ -1,0 +1,35 @@
+{# 2026-11-04 - smart-voca - S-01 설정 (화면 설계 §4.5). 규칙은 서버의 setting_service에서 받는다. 파일 위치: src/web/templates/settings.html #}
+{% extends "member_base.html" %}
+{% block scripts %}<script src="/static/settings.js" defer></script>{% endblock %}
+{% block member_content %}
+<form id="settings-form" class="settings-form" novalidate>
+  {% for field in count_fields %}
+  <div class="field">
+    <label for="{{ field.name }}">{{ field.label }}</label>
+    <input id="{{ field.name }}" name="{{ field.name }}" type="number" inputmode="numeric" step="1"
+           min="{{ field.minimum }}" max="{{ field.maximum }}" aria-describedby="{{ field.name }}-help" required>
+    <p class="help" id="{{ field.name }}-help">{{ field.minimum }} 이상</p>
+    <p class="field-error" id="{{ field.name }}-error" hidden></p>
+  </div>
+  {% endfor %}
+  <div class="field">
+    <label for="test_format">시험 기본 형식</label>
+    <select id="test_format" name="test_format">
+      {% for code, label in format_choices %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+    </select>
+    <p class="field-error" id="test_format-error" hidden></p>
+  </div>
+  <div class="field">
+    <label for="test_direction">시험 기본 방향</label>
+    <select id="test_direction" name="test_direction">
+      {% for code, label in direction_choices %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+    </select>
+    <p class="field-error" id="test_direction-error" hidden></p>
+  </div>
+  <p class="help">이미 만든 일차의 진도는 바뀌지 않습니다.</p>
+  <div class="form-actions">
+    <button type="submit" id="settings-save" class="needs-verified" disabled>저장</button>
+    <button type="button" id="settings-revert" class="secondary" disabled>되돌리기</button>
+  </div>
+</form>
+{% endblock %}

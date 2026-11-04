@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, 임시 홈, W-01~W-03)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, 임시 홈, W-01~W-03, S-01)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from web.dependencies import OptionalSession
+from web.services.setting_service import COUNT_FIELDS, DIRECTION_CHOICES, FORMAT_CHOICES
 
 router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
@@ -20,7 +21,12 @@ def _render(request: Request, template_name: str, **context: object) -> Response
 
 
 def _render_member_page(
-    request: Request, current: OptionalSession, template_name: str, title: str, page: str
+    request: Request,
+    current: OptionalSession,
+    template_name: str,
+    title: str,
+    page: str,
+    **context: object,
 ) -> Response:
     if current is None:
         return RedirectResponse("/login", status_code=303)
@@ -31,6 +37,7 @@ def _render_member_page(
         page=page,
         display_name=current.user.display_name,
         email_verified=current.user.email_verified_at is not None,
+        **context,
     )
     # 뒤로 가기로 로그아웃 후의 회원 화면이 보이지 않게 한다
     response.headers["Cache-Control"] = "no-store"
@@ -46,6 +53,20 @@ def home(request: Request, current: OptionalSession) -> Response:
 @router.get("/words")
 def words_page(request: Request, current: OptionalSession) -> Response:
     return _render_member_page(request, current, "words.html", "단어장", "words")
+
+
+@router.get("/settings")
+def settings_page(request: Request, current: OptionalSession) -> Response:
+    return _render_member_page(
+        request,
+        current,
+        "settings.html",
+        "설정",
+        "settings",
+        count_fields=COUNT_FIELDS,
+        format_choices=FORMAT_CHOICES,
+        direction_choices=DIRECTION_CHOICES,
+    )
 
 
 @router.get("/login")
