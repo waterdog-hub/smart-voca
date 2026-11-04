@@ -1,7 +1,7 @@
 # smart-voca
 
 **프로젝트명**: smart-voca
-**상태**: 구현 완료 (화면 확인 및 자동 테스트 통과)
+**상태**: 데스크톱 앱 구현 완료 (화면 확인 및 자동 테스트 통과). 웹 서비스로 전환하는 중이며, 지금은 웹 뼈대와 상태 확인 API만 있습니다 (M0 완료)
 **성격**: ICT 폴리텍대학 AI 활용 코딩 실습 과제
 
 ## 한 줄 설명
@@ -19,14 +19,19 @@
 
 | 항목 | 내용 |
 |------|------|
-| 언어 | Python 3.14 |
+| 언어 | Python 3.15 |
 | GUI | tkinter (표준 라이브러리) |
 | 저장 | CSV 파일 (`data/` 폴더) |
-| 외부 패키지 | 없음 |
+| 외부 패키지 | 데스크톱 앱은 없음. 웹 서비스와 테스트는 `requirements-dev.txt` 참고 |
+| 웹 서비스 (전환 중) | FastAPI, Jinja2, SQLAlchemy, Alembic. DB는 개발 SQLite, 운영 PostgreSQL 예정 |
 
 ## 설치 및 실행
 
-Windows에서 Python 3.14가 설치되어 있어야 합니다. 외부 패키지 설치는 필요 없습니다.
+Windows에서 Python 3.15가 설치되어 있어야 합니다.
+
+### 데스크톱 앱
+
+외부 패키지 설치는 필요 없습니다.
 
 1. 프로젝트 폴더로 이동합니다.
    ```
@@ -39,17 +44,34 @@ Windows에서 Python 3.14가 설치되어 있어야 합니다. 외부 패키지 
 
 > 이 PC에서는 `python` 명령이 동작하지 않아 `py -3`을 씁니다.
 
+### 웹 서비스 (전환 중)
+
+1. 가상환경을 만들고 패키지를 설치합니다. 테스트를 실행할 때도 이 준비가 필요합니다.
+   ```
+   py -3 -m venv .venv
+   .venv\Scripts\python -m pip install -r requirements-dev.txt
+   ```
+2. 설정 파일을 복사합니다. `.env`가 없으면 운영 모드로 동작해 API 문서(`/docs`)가 꺼집니다.
+   ```
+   copy .env.example .env
+   ```
+3. 서버를 실행하고 `http://127.0.0.1:8000/healthz`를 엽니다.
+   ```
+   .venv\Scripts\python -m uvicorn web.app:app --app-dir src --reload
+   ```
+
 ## 테스트
 
 프로젝트 루트에서 실행합니다.
 
 ```
-py -3 -m unittest discover -s tests
+.venv\Scripts\python -m unittest discover -s tests
 ```
 
 - 단위 테스트 (핵심 로직, 저장소, 파일 저장과 백업): 51개
 - 화면 흐름 테스트 (`tests/test_gui_flow.py`): 8개
-- 합계 59개
+- 웹 테스트 (`tests/web_tests/`): 4개
+- 합계 63개
 - 테스트는 임시 폴더를 쓰므로 `data/` 파일을 바꾸지 않습니다. 화면을 띄울 수 없는 환경에서는 화면 테스트가 건너뛰어집니다.
 
 ## 사용 방법
@@ -95,7 +117,11 @@ py -3 -m unittest discover -s tests
 smart-voca/
 ├── CLAUDE.md                 # Claude 운용 지침
 ├── README.md                 # 프로젝트 소개, 설치·실행 방법
+├── requirements.txt          # 웹 서비스 운영 패키지
+├── requirements-dev.txt      # 개발·테스트 패키지
+├── .env.example              # 환경변수 예시
 ├── docs/                     # 승인된 산출물 (기획서, 설계서, 개발방법론)
+│   ├── web/                  # 웹 전환 설계 문서와 구현 계획
 │   └── old/                  # 이전 버전 보관
 ├── ai-agent/
 │   ├── claude/               # 작업 기록 (검토, 작업계획, 일지)
@@ -106,13 +132,16 @@ smart-voca/
 │   ├── config.py             # 경로, 기본 설정값
 │   ├── models.py             # 데이터 클래스
 │   ├── core/                 # 저장소, 진도 생성, 시험 문항, 채점, 단어 편집 규칙
-│   └── gui/                  # 화면 (탭 4개, 대화상자)
+│   ├── gui/                  # 화면 (탭 4개, 대화상자)
+│   └── web/                  # 웹 서비스 (전환 중)
 ├── tests/                    # 단위 테스트, 화면 흐름 테스트
+│   └── web_tests/            # 웹 테스트
 └── data/                     # 단어장과 학습 기록 (CSV)
 ```
 
 ## 문서
 
-- 기획서: [docs/기획_261028_smart-voca 기획서 v0.8.md](docs/기획_261028_smart-voca%20기획서%20v0.8.md)
-- 설계서: [docs/설계_261028_smart-voca 설계서 v0.4.md](docs/설계_261028_smart-voca%20설계서%20v0.4.md)
+- 기획서: [docs/기획_261028_smart-voca 기획서 v0.10.md](docs/기획_261028_smart-voca%20기획서%20v0.10.md)
+- 설계서: [docs/설계_261028_smart-voca 설계서 v0.7.md](docs/설계_261028_smart-voca%20설계서%20v0.7.md)
+- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.2.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.2.md)
 - 상위 방법론: [docs/개발방법론.md](docs/개발방법론.md)

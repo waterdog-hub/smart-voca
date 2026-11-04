@@ -11,17 +11,17 @@
 - **한 줄 설명**: 영어 단어 암기와 시험을 돕는 Windows 학습 프로그램 (진도 관리, 객관식·주관식 시험, 오답 복습)
 - **작성자**: `260322 은형주`
 - **리포지토리**: `https://github.com/waterdog-hub/smart-voca`
-- **상태**: 구현 완료, 화면 동작 확인 완료 (2026-10-28 기준). 일정·제출 형식 미정
+- **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M0 완료, 2026-11-04). 일정·제출 형식 미정
 
 ### 기술 스택
 
 | 레이어 | 기술 |
 |--------|------|
-| 언어 | Python 3.14 |
-| 주요 라이브러리 | 표준 라이브러리만 사용 (외부 패키지 설치 없음) |
-| 프론트엔드 | tkinter (Windows 데스크톱 GUI) |
-| DB | 없음 (설정·단어·학습 기록을 CSV 파일로 저장) |
-| 실행 환경 | 로컬 Windows (호스트 직접 실행, 컨테이너 미사용) |
+| 언어 | Python 3.15 |
+| 주요 라이브러리 | 웹: FastAPI, SQLAlchemy, Alembic, pydantic, argon2-cffi, uvicorn 등 (`requirements.txt`). 데스크톱 앱은 표준 라이브러리만 사용 |
+| 프론트엔드 | 웹: Jinja2 + 필요한 부분만 자바스크립트. 데스크톱: tkinter |
+| DB | 웹: 개발 SQLite, 운영 PostgreSQL. 데스크톱: 없음 (CSV 파일로 저장) |
+| 실행 환경 | 개발: 로컬 Windows (호스트 직접 실행, `.venv`). 운영: 관리형 플랫폼에 컨테이너 배포 (M10) |
 
 ## 상위 정책 참조
 
@@ -93,11 +93,13 @@ smart-voca/
 - 호스트에서 직접 빌드 금지 여부 (컨테이너를 쓴다면 대부분 금지 — 실행 환경 일치 보장)
 - 캐시 관련 알려진 함정 (브라우저 캐시, 빌드 캐시, 주피터 커널 재시작 필요 여부 등)
 
-- 기술 스택: Python 3.14 (표준 라이브러리만 사용, 외부 패키지 설치 없음), tkinter GUI, CSV 저장
-- 테스트 실행 (프로젝트 루트에서): `py -3 -m unittest discover -s tests`
-  - 이 PC에서는 `python` 명령이 동작하지 않아 `py -3`을 쓴다.
-- 실행: `py -3 src/main.py` (Windows 프로그램, 별도 빌드 없음)
-- 호스트 직접 실행 (컨테이너 미사용)
+- 기술 스택: 위 표 참고. 웹 전환 설계와 구현 계획은 `docs/web/`에 있다.
+- 처음 준비 (프로젝트 루트에서): `py -3 -m venv .venv` 후 `.venv\Scripts\python -m pip install -r requirements-dev.txt`
+- 테스트 실행 (프로젝트 루트에서): `.venv\Scripts\python -m unittest discover -s tests`
+  - 시스템 Python(`py -3`)에는 웹 패키지가 없어 웹 테스트가 실패한다.
+- 웹 실행: `.venv\Scripts\python -m uvicorn web.app:app --app-dir src --reload` (`.env`가 없으면 `APP_ENV=production`으로 동작한다)
+- 데스크톱 앱 실행: `py -3 src/main.py` (별도 빌드 없음)
+- 개발은 호스트에서 직접 실행한다. 운영 배포만 컨테이너를 쓴다 (배포·운영 설계 D-OP02, M10).
 - 데이터 파일은 `data/`에 생성되며, 실행 중 학습 기록이 바뀐다. 테스트는 임시 폴더를 쓴다.
 
 ## 코드 작성 규칙
@@ -268,8 +270,10 @@ smart-voca/
 > 진행하면서 이 프로젝트에만 해당하는 규칙·주의사항을 여기에 쌓는다.
 > (예: 특정 데이터셋의 결측치 처리 방침, 자주 겪은 에러와 해결법, 채점 기준 등)
 
-- **Python 실행 명령**: 이 PC에서는 `python`이 동작하지 않으므로 `py -3`을 쓴다 (종료 코드 9009).
-- **테스트 실행 위치**: 프로젝트 루트에서 `py -3 -m unittest discover -s tests`만 쓴다. `-t .` 옵션을 붙이면 import 오류가 난다.
+- **Python 실행 명령**: 이 PC에서는 `python`이 동작하지 않는다 (종료 코드 9009). 웹 작업과 테스트는 `.venv\Scripts\python`, 가상환경을 만들 때와 데스크톱 앱 실행은 `py -3`을 쓴다. 설치된 버전은 3.15.2다.
+- **테스트 실행 위치**: 프로젝트 루트에서 `.venv\Scripts\python -m unittest discover -s tests`만 쓴다. `-t .` 옵션을 붙이면 import 오류가 난다.
+- **웹 테스트 폴더 이름**: `tests/web_tests/`를 쓴다. `tests/web/`으로 하면 `src/web/`과 패키지 이름이 겹쳐 import 오류가 난다 (구현 계획 D-IMP06).
+- **테스트 경고**: `httpx`를 쓰면 Starlette 테스트 클라이언트가 `httpx2` 권장 경고를 낸다. 테스트 결과에는 영향이 없다. 설계에서 정한 `httpx`를 유지하고 있다.
 - **콘솔 한글 깨짐**: Windows 콘솔(cp949)에서 한글이 깨져 보여도 데이터 문제가 아니다. CSV 파일은 `utf-8-sig`로 저장된다.
 - **실행 중 데이터 변경**: 앱을 조작하면 `data/`의 CSV(설정, 학습 기록, 일차 진도)가 바뀐다. 테스트는 임시 폴더를 쓰므로 `data/`를 건드리지 않는다.
 - **일정·제출 형식**: 미정 (기획서 Q-10, Q-11). 실습 과제라 제출 부담은 없다.
