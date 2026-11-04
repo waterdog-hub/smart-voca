@@ -149,5 +149,5 @@ smart-voca/
 
 - 기획서: [docs/기획_261028_smart-voca 기획서 v0.10.md](docs/기획_261028_smart-voca%20기획서%20v0.10.md)
 - 설계서: [docs/설계_261028_smart-voca 설계서 v0.7.md](docs/설계_261028_smart-voca%20설계서%20v0.7.md)
-- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.4.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.4.md)
+- 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.5.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.5.md)
 - 상위 방법론: [docs/개발방법론.md](docs/개발방법론.md)
