@@ -5,12 +5,18 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
-from web.db.base import check_database, make_engine
-from web.routers import health_api
+from web.db.base import check_database, make_engine, make_session_factory
+from web.errors import register_error_handlers
+from web.routers import auth_api, health_api, pages
+from web.services.mail_service import Mailer, create_mailer
 from web.settings import Settings
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 @asynccontextmanager
@@ -21,7 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.engine.dispose()
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -> FastAPI:
     # uvicorn --factory로 실행한다. import만으로 설정을 읽지 않아 .env 없는 환경에서도 import할 수 있다
     app_settings = settings if settings is not None else Settings()
 
@@ -33,6 +39,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     else:
         app = FastAPI(title="smart-voca", lifespan=lifespan)
 
+    app.state.settings = app_settings
     app.state.engine = make_engine(app_settings.database_url)
+    app.state.session_factory = make_session_factory(app.state.engine)
+    # 테스트는 보낸 메일을 확인하려고 기록용 구현을 넘긴다
+    app.state.mailer = mailer if mailer is not None else create_mailer(app_settings)
+
+    register_error_handlers(app)
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(health_api.router)
+    app.include_router(auth_api.router)
+    app.include_router(pages.router)
     return app

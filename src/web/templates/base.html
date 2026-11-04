@@ -1,0 +1,19 @@
+{# 2026-11-04 - smart-voca - 모든 화면의 공통 틀. 파일 위치: src/web/templates/base.html #}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} - smart-voca</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/auth.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><a href="/">smart-voca</a></header>
+  <main class="panel" data-page="{{ page }}">
+    <h1>{{ title }}</h1>
+    {% block content %}{% endblock %}
+    <p class="message" id="message" role="alert" hidden></p>
+  </main>
+</body>
+</html>

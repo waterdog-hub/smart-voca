@@ -6,7 +6,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Engine, MetaData, create_engine, event, make_url, text
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.types import TypeDecorator
 
 # 제약 이름을 DB 자동 이름에 맡기면 이후 마이그레이션에서 지목하기 어려워 규칙을 정한다
@@ -66,6 +66,11 @@ def make_engine(database_url: str) -> Engine:
             cursor.close()
 
     return engine
+
+
+def make_session_factory(engine: Engine) -> sessionmaker[Session]:
+    # 커밋 후 응답을 만들 때 읽은 값을 다시 조회하지 않도록 만료시키지 않는다
+    return sessionmaker(engine, expire_on_commit=False)
 
 
 def check_database(engine: Engine) -> None:

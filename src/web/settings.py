@@ -5,8 +5,12 @@
 
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# 개발 전용 값이다. 운영에서는 아래 검사가 이 기본값을 쓰지 못하게 막는다
+LOCAL_AUTH_HASH_KEY = "local-development-only-auth-hash-key"
+LOCAL_PUBLIC_BASE_URL = "http://127.0.0.1:8000"
 
 
 class Settings(BaseSettings):
@@ -17,7 +21,26 @@ class Settings(BaseSettings):
     app_env: Literal["local", "production"] = "production"
     # 기본값을 두지 않는다. 운영에서 빠뜨렸을 때 빈 SQLite로 조용히 뜨는 사고를 막는다
     database_url: str = Field(min_length=1)
+    # 이메일과 IP는 경우의 수가 작아 키 없는 해시는 쉽게 되돌릴 수 있다 (이슈 #9)
+    auth_hash_key: str | None = Field(default=None, min_length=32)
+    # 메일 링크 주소. 요청의 Host 헤더는 조작할 수 있어 쓰지 않는다 (이슈 #9)
+    public_base_url: str | None = None
+    session_ttl_absolute_days: int = Field(default=14, gt=0)
+    session_ttl_idle_days: int = Field(default=3, gt=0)
 
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @model_validator(mode="after")
+    def fill_or_require_auth_values(self) -> "Settings":
+        if self.is_production:
+            if self.auth_hash_key is None:
+                raise ValueError("운영 환경에는 AUTH_HASH_KEY가 필요합니다.")
+            if self.public_base_url is None or not self.public_base_url.startswith("https://"):
+                raise ValueError("운영 환경의 PUBLIC_BASE_URL은 https 주소여야 합니다.")
+        else:
+            self.auth_hash_key = self.auth_hash_key or LOCAL_AUTH_HASH_KEY
+            self.public_base_url = self.public_base_url or LOCAL_PUBLIC_BASE_URL
+        self.public_base_url = self.public_base_url.rstrip("/")
+        return self

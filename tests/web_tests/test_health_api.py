@@ -68,8 +68,46 @@ class SettingsTest(unittest.TestCase):
 
     def test_app_env_defaults_to_production(self):
         with mock.patch.dict(os.environ, self.environment_without("APP_ENV"), clear=True):
-            settings = Settings(database_url="sqlite://", _env_file=None)
+            settings = Settings(
+                database_url="sqlite://",
+                auth_hash_key="k" * 32,
+                public_base_url="https://voca.example.test/",
+                _env_file=None,
+            )
         self.assertTrue(settings.is_production)
+        self.assertEqual(settings.public_base_url, "https://voca.example.test")
+
+    def test_production_requires_auth_hash_key(self):
+        with mock.patch.dict(os.environ, self.environment_without("AUTH_HASH_KEY"), clear=True):
+            with self.assertRaises(ValidationError):
+                Settings(
+                    app_env="production",
+                    database_url="sqlite://",
+                    public_base_url="https://voca.example.test",
+                    _env_file=None,
+                )
+
+    def test_production_requires_https_public_base_url(self):
+        for public_base_url in (None, "http://voca.example.test"):
+            with self.assertRaises(ValidationError, msg=public_base_url):
+                Settings(
+                    app_env="production",
+                    database_url="sqlite://",
+                    auth_hash_key="k" * 32,
+                    public_base_url=public_base_url,
+                    _env_file=None,
+                )
+
+    def test_short_auth_hash_key_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            Settings(app_env="local", database_url="sqlite://", auth_hash_key="short", _env_file=None)
+
+    def test_local_fills_development_defaults(self):
+        names = ("AUTH_HASH_KEY", "PUBLIC_BASE_URL")
+        with mock.patch.dict(os.environ, self.environment_without(*names), clear=True):
+            settings = Settings(app_env="local", database_url="sqlite://", _env_file=None)
+        self.assertEqual(settings.public_base_url, "http://127.0.0.1:8000")
+        self.assertGreaterEqual(len(settings.auth_hash_key), 32)
 
     def test_missing_database_url_is_rejected(self):
         with mock.patch.dict(os.environ, self.environment_without("DATABASE_URL"), clear=True):
