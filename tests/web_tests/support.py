@@ -117,6 +117,12 @@ class AuthTestCase(WebTestCase):
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["csrf_token"]
 
+    def verified_member(self, email="learner@example.com", client=None):
+        """인증까지 끝낸 회원을 만들고 쓰기 요청에 쓸 헤더를 돌려준다."""
+        csrf_token = self.signup_and_login(email, client=client)
+        self.verify_last_mail(client=client)
+        return {"X-CSRF-Token": csrf_token}
+
     def verify_last_mail(self, client=None):
         response = (client or self.client).post(
             VERIFY_API, json={"token": self.mailer.last_token()}

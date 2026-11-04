@@ -7,17 +7,18 @@ const API_BASE = "/api/v1/auth";
 const NETWORK_ERROR = { code: "NETWORK", message: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요." };
 const UNKNOWN_ERROR = { code: "UNKNOWN", message: "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." };
 
-async function callApi(path, { method = "POST", body, csrfToken } = {}) {
+async function requestJson(url, { method = "POST", body, formData, csrfToken } = {}) {
   const headers = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await fetch(url, {
       method,
       headers,
       credentials: "same-origin",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // 파일 업로드는 브라우저가 Content-Type과 경계 값을 직접 정한다
+      body: formData ?? (body === undefined ? undefined : JSON.stringify(body)),
     });
   } catch {
     return { ok: false, status: 0, error: NETWORK_ERROR };
@@ -27,14 +28,30 @@ async function callApi(path, { method = "POST", body, csrfToken } = {}) {
   return { ok: response.ok, status: response.status, data, error: data?.error ?? UNKNOWN_ERROR };
 }
 
+function callApi(path, options) {
+  return requestJson(`${API_BASE}${path}`, options);
+}
+
 // 쿠키만으로 요청이 위조되지 않도록 쓰기 요청마다 세션의 CSRF 토큰을 함께 보낸다
-async function callWithSession(path) {
+async function sendWithSession(url, options) {
   const session = await callApi("/session", { method: "GET" });
   if (!session.ok || !session.data?.user) {
     window.location.assign("/login");
     return null;
   }
-  return callApi(path, { csrfToken: session.data.csrf_token });
+  return requestJson(url, { ...options, csrfToken: session.data.csrf_token });
+}
+
+function callWithSession(path) {
+  return sendWithSession(`${API_BASE}${path}`);
+}
+
+function writeJson(url, method, body) {
+  return sendWithSession(url, { method, body });
+}
+
+function writeForm(url, formData) {
+  return sendWithSession(url, { method: "POST", formData });
 }
 
 function showMessage(text, kind) {
@@ -170,7 +187,8 @@ function start() {
     // 같은 탭에 새 링크를 붙여 넣으면 # 뒤만 바뀌어 페이지가 다시 열리지 않는다
     window.addEventListener("hashchange", verifyEmailFromLink);
   }
-  if (page === "home") setupHome();
+  // 로그아웃과 인증 안내 띠는 회원 화면 공통 틀에 있다
+  if (document.getElementById("logout-button")) setupHome();
 }
 
 start();

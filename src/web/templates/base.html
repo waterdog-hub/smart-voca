@@ -7,13 +7,16 @@
   <title>{{ title }} - smart-voca</title>
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/auth.js" defer></script>
+  {% block scripts %}{% endblock %}
 </head>
 <body>
   <header class="site-header"><a href="/">smart-voca</a></header>
+  {% block body %}
   <main class="panel" data-page="{{ page }}">
     <h1>{{ title }}</h1>
-    {% block content %}{% endblock %}
     <p class="message" id="message" role="alert" hidden></p>
+    {% block content %}{% endblock %}
   </main>
+  {% endblock %}
 </body>
 </html>

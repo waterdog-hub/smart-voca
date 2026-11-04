@@ -27,10 +27,15 @@ def get_db(request: Request) -> Iterator[Session]:
 DbSession = Annotated[Session, Depends(get_db)]
 
 
-def get_auth_service(request: Request, db: DbSession) -> AuthService:
+def get_client_ip(request: Request) -> str:
     # 운영에서는 uvicorn의 프록시 헤더 설정이 있어야 이 값이 실제 사용자 IP가 된다 (M10)
-    client_ip = request.client.host if request.client else UNKNOWN_CLIENT_IP
-    return AuthService(db, request.app.state.settings, request.app.state.mailer, client_ip)
+    return request.client.host if request.client else UNKNOWN_CLIENT_IP
+
+
+def get_auth_service(request: Request, db: DbSession) -> AuthService:
+    return AuthService(
+        db, request.app.state.settings, request.app.state.mailer, get_client_ip(request)
+    )
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]

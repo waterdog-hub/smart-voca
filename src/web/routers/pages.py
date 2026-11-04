@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, 임시 홈)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-02~P-05, 임시 홈, W-01~W-03)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
@@ -19,21 +19,33 @@ def _render(request: Request, template_name: str, **context: object) -> Response
     return templates.TemplateResponse(request, template_name, context)
 
 
-@router.get("/")
-def home(request: Request, current: OptionalSession) -> Response:
+def _render_member_page(
+    request: Request, current: OptionalSession, template_name: str, title: str, page: str
+) -> Response:
     if current is None:
         return RedirectResponse("/login", status_code=303)
-    # H-01은 M5에서 만든다. 그때까지 로그인 결과를 확인하는 임시 화면이다 (이슈 #9)
     response = _render(
         request,
-        "home_temporary.html",
-        title="홈",
-        page="home",
+        template_name,
+        title=title,
+        page=page,
         display_name=current.user.display_name,
         email_verified=current.user.email_verified_at is not None,
     )
+    # 뒤로 가기로 로그아웃 후의 회원 화면이 보이지 않게 한다
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+@router.get("/")
+def home(request: Request, current: OptionalSession) -> Response:
+    # H-01은 M5에서 만든다. 그때까지 로그인 결과를 확인하는 임시 화면이다 (이슈 #9)
+    return _render_member_page(request, current, "home_temporary.html", "홈", "home")
+
+
+@router.get("/words")
+def words_page(request: Request, current: OptionalSession) -> Response:
+    return _render_member_page(request, current, "words.html", "단어장", "words")
 
 
 @router.get("/login")

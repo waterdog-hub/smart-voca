@@ -1,0 +1,25 @@
+{# 2026-11-04 - smart-voca - 회원 화면 공통 틀 (화면 설계 §4.1). 메뉴는 만든 화면만 표시한다. 파일 위치: src/web/templates/member_base.html #}
+{% extends "base.html" %}
+{% block body %}
+<div class="member-layout">
+  <nav class="member-nav" aria-label="주 메뉴">
+    <a href="/" {% if page == "home" %}aria-current="page"{% endif %}>홈</a>
+    <a href="/words" {% if page == "words" %}aria-current="page"{% endif %}>단어장</a>
+    <div class="member-nav-user">
+      <span>{{ display_name }} 님</span>
+      <button type="button" id="logout-button" class="secondary">로그아웃</button>
+    </div>
+  </nav>
+  <main class="member-main" data-page="{{ page }}" data-email-verified="{{ 'true' if email_verified else 'false' }}">
+    {% if not email_verified %}
+    <div class="banner" id="verify-banner">
+      <p>이메일 인증이 필요합니다. 인증 전에는 단어 편집 같은 쓰기 기능을 쓸 수 없습니다.</p>
+      <button type="button" id="resend-button" class="secondary">인증 메일 다시 받기</button>
+    </div>
+    {% endif %}
+    <h1>{{ title }}</h1>
+    <p class="message" id="message" role="alert" hidden></p>
+    {% block member_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

@@ -73,6 +73,40 @@ class AuthPagesTest(AuthTestCase):
         self.assertNotIn("<script>alert(1)</script>", html)
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
 
+    def test_words_page_requires_login(self):
+        response = self.client.get("/words", follow_redirects=False)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["location"], "/login")
+
+    def test_words_page_has_core_elements_without_inline_code(self):
+        self.verified_member()
+        response = self.client.get("/words")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        html = response.text
+        for element in ('id="word-search"', 'id="add-form"', 'id="import-file"', 'id="edit-panel"',
+                        'id="delete-selected"', 'href="/api/v1/words/export"', 'aria-current="page"'):
+            self.assertIn(element, html)
+        self.assertIn('src="/static/words.js"', html)
+        self.assertIn('data-email-verified="true"', html)
+        self.assertNotIn('id="verify-banner"', html)
+        self.assertNotIn("<script>", html)
+        self.assertNotIn("onclick=", html)
+        self.assertEqual(self.client.get("/static/words.js").status_code, 200)
+
+    def test_words_page_shows_banner_when_unverified(self):
+        self.signup_and_login()
+        html = self.client.get("/words").text
+        self.assertIn('id="verify-banner"', html)
+        self.assertIn('data-email-verified="false"', html)
+
+    def test_member_pages_share_navigation_and_logout(self):
+        self.signup_and_login()
+        for path in ("/", "/words"):
+            html = self.client.get(path).text
+            self.assertIn('id="logout-button"', html, path)
+            self.assertIn('href="/words"', html, path)
+
     def test_unknown_page_is_not_api_format(self):
         response = self.client.get("/no-such-page")
         self.assertEqual(response.status_code, 404)
