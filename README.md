@@ -196,7 +196,7 @@ smart-voca/
 
 ## 문서
 
-- 기획서: [docs/기획_261104_smart-voca 기획서 v0.12.md](docs/기획_261104_smart-voca%20기획서%20v0.12.md)
+- 기획서: [docs/기획_261104_smart-voca 기획서 v0.13.md](docs/기획_261104_smart-voca%20기획서%20v0.13.md)
 - 웹 요구사항 명세: [docs/web/분석_261104_웹 요구사항 명세 v0.5.md](docs/web/분석_261104_웹%20요구사항%20명세%20v0.5.md)
 - 웹 전환 구현 계획: [docs/web/작업계획_261104_웹 구현 계획 v0.10.md](docs/web/작업계획_261104_웹%20구현%20계획%20v0.10.md)
 - 웹 설계 문서 전체: [docs/web/](docs/web/)
