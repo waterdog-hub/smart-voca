@@ -11,3 +11,10 @@ data/backup/
 
 # 환경 변수 파일 (비밀정보)
 .env
+
+# 파이썬 가상환경
+.venv/
+
+# 개발용 SQLite DB
+*.db
+*.sqlite3
