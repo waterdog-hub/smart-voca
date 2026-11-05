@@ -17,7 +17,7 @@ from browser_check_lib import DESKTOP_WIDTH, PHONE_WIDTH, Browser, Session
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SAMPLE_WORDS = PROJECT_ROOT / "data" / "words.csv"
 SAMPLE_MANIFEST = PROJECT_ROOT / "data" / "wordbooks.json"
-SAMPLE_BOOK_TITLE = "기본 영단어 1"
+SAMPLE_BOOK_TITLE = "초급 단어"
 SAMPLE_BOOK_ROWS = 500
 
 GREEK_TITLE = "점검용 그리스 문자"

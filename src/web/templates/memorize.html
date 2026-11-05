@@ -32,11 +32,11 @@
   <section id="memorize-card" class="memorize-card" tabindex="-1" aria-live="polite" hidden>
     <p id="card-word" class="card-word"></p>
     <p id="card-meaning" class="card-meaning" hidden></p>
-    <button type="button" id="show-meaning" class="secondary">뜻 보기 (↑ / Space)</button>
+    <button type="button" id="show-meaning" class="secondary" aria-keyshortcuts="ArrowUp Space">뜻 보기</button>
   </section>
   <div id="card-actions" class="form-actions" hidden>
-    <button type="button" id="again-button" class="secondary">다시 (← / 2)</button>
-    <button type="button" id="remember-button">외움 (→ / 1)</button>
+    <button type="button" id="again-button" class="secondary" aria-keyshortcuts="ArrowLeft 2">다시</button>
+    <button type="button" id="remember-button" aria-keyshortcuts="ArrowRight 1">외움</button>
   </div>
   <p class="help" id="key-help" hidden>단축키: 뜻 보기 ↑ 또는 Space, 외움 → 또는 1, 다시 ← 또는 2</p>
 

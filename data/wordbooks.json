@@ -2,7 +2,7 @@
   "wordbooks": [
     {
       "slug": "basic-1",
-      "title": "기본 영단어 1",
+      "title": "초급 단어",
       "description": "표본 단어 목록의 1~500번째 단어입니다. 처음 시작하는 분께 맞습니다.",
       "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1~500번째",
       "file": "words.csv",
@@ -10,7 +10,7 @@
     },
     {
       "slug": "basic-2",
-      "title": "기본 영단어 2",
+      "title": "중급 단어",
       "description": "표본 단어 목록의 501~1000번째 단어입니다.",
       "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 501~1000번째",
       "file": "words.csv",
@@ -18,7 +18,7 @@
     },
     {
       "slug": "basic-3",
-      "title": "기본 영단어 3",
+      "title": "고급 단어",
       "description": "표본 단어 목록의 1001~1500번째 단어입니다.",
       "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1001~1500번째",
       "file": "words.csv",
@@ -26,7 +26,7 @@
     },
     {
       "slug": "basic-4",
-      "title": "기본 영단어 4",
+      "title": "심화 단어",
       "description": "표본 단어 목록의 1501번째부터 끝까지의 단어입니다.",
       "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1501번째부터 끝까지",
       "file": "words.csv",

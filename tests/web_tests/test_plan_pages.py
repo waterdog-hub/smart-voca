@@ -60,6 +60,17 @@ class PlanPagesTest(PlansTestCase):
         self.assertNotIn("<script>", html)
         self.assertNotIn("style=", html)
 
+    def test_memorize_buttons_do_not_show_shortcut_hints_but_keep_them_for_assistive_tech(self):
+        self.add_words("a1", "a2")
+        self.use_small_day(daily_new_count=1)
+        self.create_ok()
+        html = self.client.get("/memorize").text
+        # 버튼 글자는 짧게 두고, 키보드 조작은 그대로 되며 보조 기술에는 aria-keyshortcuts로 알린다 (사용자 요청)
+        for label, keys in (("뜻 보기", "ArrowUp Space"), ("다시", "ArrowLeft 2"), ("외움", "ArrowRight 1")):
+            self.assertRegex(html, r'aria-keyshortcuts="%s">%s</button>' % (keys, label))
+        for hint in ("(← / 2)", "(→ / 1)", "(↑ / Space)"):
+            self.assertNotIn(hint, html)
+
     def test_memorize_page_past_day_is_review_mode(self):
         self.add_words("a1", "a2")
         self.use_small_day(daily_new_count=1)

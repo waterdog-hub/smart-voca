@@ -264,6 +264,11 @@ class ManifestTest(AuthTestCase):
             keys = db.scalars(select(WordbookEntry.word_key)).all()
         self.assertEqual(len(keys), len(set(keys)))  # 단어장 사이에도 겹치는 단어가 없다
 
+    def test_project_sample_wordbooks_are_named_by_level_in_order(self):
+        # 단계 이름은 사용자 요청이다 (이슈 #17 후속). 순서가 곧 목록의 앞뒤다
+        manifest = read_manifest(PROJECT_ROOT / "data" / "wordbooks.json")
+        self.assertEqual([spec.title for spec in manifest], ["초급 단어", "중급 단어", "고급 단어", "심화 단어"])
+
 
 if __name__ == "__main__":
     unittest.main()
