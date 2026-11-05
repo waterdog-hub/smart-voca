@@ -150,9 +150,12 @@ class AccountService:
         self, current: CurrentSession, current_password: str, new_password: str
     ) -> None:
         user = current.user
-        self._check_current_password(current, current_password, utc_now())
+        # 소셜 전용 계정은 비밀번호가 없어 현재 값 없이 새로 설정한다 (D-M808)
+        has_password = user.password_hash is not None
+        if has_password:
+            self._check_current_password(current, current_password, utc_now())
         problem = passwords.find_password_problem(new_password, user.email)
-        if problem is None and new_password == current_password:
+        if has_password and problem is None and new_password == current_password:
             problem = "현재 비밀번호와 다른 비밀번호를 입력해 주세요."
         if problem:
             self.db.commit()  # 확인 성공으로 지운 실패 기록을 확정한다
@@ -175,8 +178,20 @@ class AccountService:
         self.db.commit()
         logger.info("모든 기기 로그아웃: 회원 %s", current.user.id)
 
+    def confirm_password(self, current: CurrentSession, password: str) -> None:
+        """비밀번호가 있는 계정만 확인한다. 소셜 계정 연결 전에 하이재킹된 세션을 걸러 낸다 (D-M807)."""
+        if current.user.password_hash is not None:
+            self._check_current_password(current, password, utc_now())
+
     def delete_account(self, current: CurrentSession, password: str) -> None:
         user_id = current.user.id
+        if current.user.password_hash is None:
+            raise ApiError(
+                400,
+                "VALIDATION_FAILED",
+                FIELDS_MESSAGE,
+                fields={"current_password": "탈퇴하려면 먼저 비밀번호를 설정해 주세요."},
+            )
         self._check_current_password(current, password, utc_now())
         auth_repository.delete_user(self.db, user_id)
         self.db.commit()

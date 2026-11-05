@@ -1,0 +1,14 @@
+{# 2026-11-05 - smart-voca - 소셜 가입에서 이메일을 받지 못했을 때 이메일 입력 (데이터 모델 §4.3). 파일 위치: src/web/templates/signup_social.html #}
+{% extends "base.html" %}
+{% block content %}
+<p class="help">{{ provider|capitalize }} 계정에서 인증된 이메일을 받지 못했습니다. 사용할 이메일을 입력하면 확인 메일을 보내 드립니다. 메일의 링크를 누르면 가입이 완료됩니다.</p>
+<form id="social-complete-form" novalidate>
+  <div class="field">
+    <label for="email">이메일</label>
+    <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
+    <p class="field-error" id="email-error" hidden></p>
+  </div>
+  <button type="submit">확인 메일 받기</button>
+</form>
+<p class="links"><a href="/login">로그인 화면으로 이동</a></p>
+{% endblock %}

@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     public_base_url: str | None = None
     session_ttl_absolute_days: int = Field(default=14, gt=0)
     session_ttl_idle_days: int = Field(default=3, gt=0)
+    # 소셜 로그인 (M8). 키가 있는 제공자만 켠다. 시연 환경에서는 켜지 않는다 (이슈 #19)
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    kakao_rest_api_key: str | None = None
+    kakao_client_secret: str | None = None
 
     @property
     def is_production(self) -> bool:

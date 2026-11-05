@@ -1,0 +1,10 @@
+{# 2026-11-05 - smart-voca - 로그인·가입 화면의 소셜 로그인 버튼. 키가 설정된 제공자만 표시한다 (M8). 파일 위치: src/web/templates/social_buttons.html #}
+{% if social_buttons %}
+<div class="social-login" id="social-login">
+  <p class="help">또는 소셜 계정으로 계속하기</p>
+  {% for button in social_buttons %}
+  <a class="button-link social-button" id="social-{{ button.name }}" href="/api/v1/auth/social/{{ button.name }}/start">{{ button.label }} 계정으로 계속하기</a>
+  {% endfor %}
+  <p class="help">소셜 계정으로 처음 로그인하면 이용약관과 개인정보 처리방침에 동의한 것으로 봅니다.</p>
+</div>
+{% endif %}

@@ -9,12 +9,14 @@ from web.dependencies import (
     AccountServiceDep,
     LoggedIn,
     LoggedInWrite,
+    SocialServiceDep,
     VerifiedWrite,
     clear_session_cookie,
 )
 from web.schemas.auth import (
     AccountDeleteRequest,
     DisplayNameRequest,
+    MeResponse,
     MessageResponse,
     PasswordChangeRequest,
     UserSummary,
@@ -24,9 +26,11 @@ router = APIRouter(prefix="/api/v1/me", tags=["me"])
 
 
 @router.get("")
-def read_me(current: LoggedIn, response: Response) -> UserSummary:
+def read_me(current: LoggedIn, response: Response, social: SocialServiceDep) -> MeResponse:
     response.headers["Cache-Control"] = "no-store"
-    return UserSummary.from_user(current.user)
+    return MeResponse.build(
+        current.user, social.linked_providers(current.user), social.available_providers()
+    )
 
 
 @router.patch("")

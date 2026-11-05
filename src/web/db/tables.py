@@ -282,6 +282,14 @@ class AuthSession(Base):
     pending_provider: Mapped[str | None] = mapped_column(String(20))
     pending_provider_user_id: Mapped[str | None] = mapped_column(String(255))
     pending_display_name: Mapped[str | None] = mapped_column(String(100))
+    # 소셜 로그인 시작 상태 (인증 설계 §4.5, 이슈 #19). 콜백이 일치를 확인하고 바로 지운다
+    oauth_state: Mapped[str | None] = mapped_column(String(100))
+    oauth_code_verifier: Mapped[str | None] = mapped_column(String(200))
+    # 로그인한 회원이 계정 연결을 시작했을 때 그 회원 번호. 회원이 지워져도 대기 행은 만료로 정리된다
+    oauth_link_user_id: Mapped[int | None] = mapped_column(Integer)
+    # 이메일이 없는 소셜 가입: 입력받은 이메일과 인증 링크 값의 해시 (이슈 #19)
+    pending_email: Mapped[str | None] = mapped_column(String(254))
+    pending_token_hash: Mapped[str | None] = mapped_column(String(SHA256_HEX_LENGTH), index=True)
 
 
 class AuthToken(Base):

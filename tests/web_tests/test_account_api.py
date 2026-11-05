@@ -242,7 +242,17 @@ class MeTest(AuthTestCase):
     def test_me_returns_the_summary_without_secrets(self):
         self.verified_member()
         body = self.client.get(ME_API).json()
-        self.assertEqual(body, {"email": EMAIL, "display_name": "학습자", "email_verified": True})
+        self.assertEqual(
+            body,
+            {
+                "email": EMAIL,
+                "display_name": "학습자",
+                "email_verified": True,
+                "has_password": True,
+                "social": [],
+                "social_available": [],
+            },
+        )
         self.assertEqual(self.client.get(ME_API).headers["cache-control"], "no-store")
 
     def test_me_requires_login(self):

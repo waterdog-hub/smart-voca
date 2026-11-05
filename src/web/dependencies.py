@@ -13,9 +13,13 @@ from web.errors import ApiError
 from web.security.csrf import is_valid_csrf_token
 from web.services.account_service import AccountService
 from web.services.auth_service import AuthService, CurrentSession
+from web.services.social_service import SocialService
 from web.settings import Settings
 
 SESSION_COOKIE_NAME = "sv_session"
+# 소셜 로그인 시작·가입 대기 행을 가리킨다. 로그인 쿠키와 따로 둔다 (이슈 #19 D-M803)
+OAUTH_COOKIE_NAME = "sv_oauth"
+OAUTH_COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60
 CSRF_HEADER_NAME = "X-CSRF-Token"
 UNKNOWN_CLIENT_IP = "unknown"
 
@@ -49,6 +53,19 @@ def get_account_service(request: Request, db: DbSession) -> AccountService:
 
 
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
+
+
+def get_social_service(request: Request, db: DbSession) -> SocialService:
+    return SocialService(
+        db,
+        request.app.state.settings,
+        request.app.state.social_providers,
+        request.app.state.mailer,
+        get_client_ip(request),
+    )
+
+
+SocialServiceDep = Annotated[SocialService, Depends(get_social_service)]
 
 
 def get_optional_session(request: Request, service: AuthServiceDep) -> CurrentSession | None:
@@ -107,6 +124,29 @@ def set_session_cookie(response: Response, session_token: str, settings: Setting
 def clear_session_cookie(response: Response, settings: Settings) -> None:
     response.delete_cookie(
         SESSION_COOKIE_NAME,
+        path="/",
+        httponly=True,
+        secure=_uses_secure_cookie(settings),
+        samesite="lax",
+    )
+
+
+def set_oauth_cookie(response: Response, pending_token: str, settings: Settings) -> None:
+    response.set_cookie(
+        OAUTH_COOKIE_NAME,
+        pending_token,
+        max_age=OAUTH_COOKIE_MAX_AGE_SECONDS,
+        path="/",
+        httponly=True,
+        secure=_uses_secure_cookie(settings),
+        # 제공자에서 돌아오는 최상위 이동에는 Lax 쿠키가 전송된다
+        samesite="lax",
+    )
+
+
+def clear_oauth_cookie(response: Response, settings: Settings) -> None:
+    response.delete_cookie(
+        OAUTH_COOKIE_NAME,
         path="/",
         httponly=True,
         secure=_uses_secure_cookie(settings),

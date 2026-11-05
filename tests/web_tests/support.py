@@ -64,8 +64,8 @@ class WebTestCase(unittest.TestCase):
             _env_file=None,
         )
 
-    def make_client(self, app_env="local", mailer=None, ip="testclient"):
-        app = create_app(self.make_settings(app_env), mailer=mailer)
+    def make_client(self, app_env="local", mailer=None, ip="testclient", social_providers=None):
+        app = create_app(self.make_settings(app_env), mailer=mailer, social_providers=social_providers)
         # 운영 쿠키에는 Secure가 붙어 https 주소로만 전송된다
         base_url = "http://testserver" if app_env == "local" else "https://testserver"
         client = TestClient(app, base_url=base_url, client=(ip, 50000))

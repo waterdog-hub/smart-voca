@@ -17,6 +17,7 @@ ACTION_SIGNUP = "signup"
 ACTION_RESEND_VERIFICATION = "resend_verification"
 ACTION_PASSWORD_RESET = "password_reset"
 ACTION_PASSWORD_CHECK = "password_check"
+ACTION_SOCIAL_START = "social_start"
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,8 @@ PASSWORD_RESET_PER_ACCOUNT = Limit(3, timedelta(hours=1))
 PASSWORD_RESET_PER_IP = Limit(20, timedelta(hours=1))
 # 로그인한 세션이 탈취돼도 비밀번호 확인 값을 무차별 대입하지 못하게 한다 (D-M705)
 PASSWORD_CHECK_PER_ACCOUNT = Limit(5, timedelta(minutes=15))
+# 소셜 로그인 시작은 DB 행을 만든다. 같은 IP가 쌓지 못하게 제한한다 (이슈 #19)
+SOCIAL_START_PER_IP = Limit(30, timedelta(minutes=10))
 
 
 def enforce_limit(

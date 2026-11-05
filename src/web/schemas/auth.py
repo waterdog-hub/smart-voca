@@ -43,7 +43,8 @@ class PasswordResetConfirm(BaseModel):
 
 
 class PasswordChangeRequest(BaseModel):
-    current_password: str = Field(max_length=MAX_PASSWORD_LENGTH)
+    # 비밀번호가 없는 소셜 전용 계정은 현재 값을 보내지 않는다 (D-M808)
+    current_password: str = Field(default="", max_length=MAX_PASSWORD_LENGTH)
     new_password: str = Field(max_length=MAX_REQUEST_PASSWORD_LENGTH)
 
 
@@ -67,6 +68,37 @@ class UserSummary(BaseModel):
             display_name=user.display_name,
             email_verified=user.email_verified_at is not None,
         )
+
+
+class MeResponse(UserSummary):
+    has_password: bool
+    social: list[str]  # 연결된 제공자 이름. 제공자 쪽 고유 번호는 응답에 넣지 않는다
+    social_available: list[str]  # 지금 켜진 제공자 (키가 설정된 것)
+
+    @classmethod
+    def build(
+        cls, user: User, social: list[str], social_available: list[str]
+    ) -> "MeResponse":
+        summary = UserSummary.from_user(user)
+        return cls(
+            **summary.model_dump(),
+            has_password=user.password_hash is not None,
+            social=social,
+            social_available=social_available,
+        )
+
+
+class SocialCompleteRequest(BaseModel):
+    email: str = Field(max_length=MAX_REQUEST_EMAIL_LENGTH)
+
+
+class SocialLinkRequest(BaseModel):
+    # 비밀번호가 있는 계정만 확인한다. 없으면 비워 둔다
+    password: str = Field(default="", max_length=MAX_PASSWORD_LENGTH)
+
+
+class SocialLinkResponse(BaseModel):
+    authorize_url: str
 
 
 class SessionResponse(BaseModel):

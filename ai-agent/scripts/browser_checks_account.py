@@ -137,3 +137,51 @@ def check_account_flow(session: Session) -> None:
         browser.wait("location.pathname==='/login' && !!document.getElementById('withdrawn-notice')"),
     )
     check("탈퇴한 계정은 로그인되지 않음", not _log_in_with(session, email, RESET_NEW_PASSWORD))
+
+
+def check_social_ui(session: Session) -> None:
+    """소셜 로그인 화면 요소 (테스트 정의서 §4.9). 제공자 서버는 부르지 않는다 (이슈 #19)."""
+    browser, check, base = session.browser, session.report.check, session.base
+    email = "browser-social@example.com"
+    browser.resize(PHONE_WIDTH, 800, mobile=True)
+
+    browser.go(f"{base}/login")
+    check("로그인 화면에 구글·카카오 버튼", browser.js("!!document.getElementById('social-google') && !!document.getElementById('social-kakao')"))
+    check(
+        "버튼이 서버의 시작 주소를 가리킴",
+        browser.js("document.getElementById('social-google').getAttribute('href')") == "/api/v1/auth/social/google/start",
+    )
+    check("375px 폭에 가로 스크롤 없음", browser.js("document.documentElement.scrollWidth<=window.innerWidth"))
+    browser.shot("login_social_375.png")
+    browser.go(f"{base}/signup")
+    check("가입 화면에도 소셜 버튼", browser.js("!!document.getElementById('social-google')"))
+
+    browser.go(f"{base}/login?social_error=denied")
+    check("실패 코드는 안내 문구로 바뀌어 표시", "취소" in browser.text("social-error"), browser.text("social-error"))
+    browser.go(f"{base}/login?social_error=%3Cb%3Ex%3C/b%3E")
+    check("알 수 없는 코드는 화면에 넣지 않음", browser.js("!document.getElementById('social-error')"))
+    browser.go(f"{base}/signup/social")
+    check("대기 상태 없이 이메일 입력 화면을 열면 로그인으로 이동", browser.wait("location.pathname==='/login'"))
+
+    session.sign_up(email, "소셜점검")
+    check("로그인", session.log_in(email))
+    browser.go(session.verification_link(email))
+    browser.wait("document.getElementById('verify-status').textContent.includes('완료')")
+    browser.go(f"{base}/account")
+    browser.wait("!!document.getElementById('social-section')")
+    check("내 계정에 소셜 연결 영역", browser.js("document.querySelectorAll('.social-link').length") == 2)
+    check("연결 안 됨 표시", "연결 안 됨" in browser.js("document.querySelector('#social-section li').textContent"))
+    browser.shot("account_social_375.png")
+    browser.fill(social_password="wrong password here")
+    browser.js("document.querySelector('.social-link').click()")
+    check(
+        "비밀번호가 틀리면 연결을 시작하지 않고 안내",
+        browser.wait("document.getElementById('message').textContent.includes('올바르지')") and browser.js("location.pathname") == "/account",
+        browser.text("message"),
+    )
+    browser.fill(social_password=TEST_PASSWORD)
+    browser.js("document.querySelector('.social-link').click()")
+    check("비밀번호가 맞으면 제공자로 이동", browser.wait("location.hostname!=='127.0.0.1'", timeout=15))
+    browser.go(f"{base}/account")
+    check("제공자에서 돌아오지 않아도 로그인은 유지", browser.js("!!document.getElementById('social-section')"))
+    check("로그아웃 후 정리", session.log_out())

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, Response
 
 from web.dependencies import (
     AccountServiceDep,
+    SocialServiceDep,
     SESSION_COOKIE_NAME,
     AuthServiceDep,
     LoggedInWrite,
@@ -109,7 +110,12 @@ def confirm_password_reset(
 
 
 @router.post("/verify-email")
-def verify_email(payload: VerifyEmailRequest, service: AuthServiceDep) -> MessageResponse:
+def verify_email(
+    payload: VerifyEmailRequest, service: AuthServiceDep, social: SocialServiceDep
+) -> MessageResponse:
+    # 이메일 없는 소셜 가입의 링크이면 회원을 만들고, 아니면 일반 이메일 인증이다 (이슈 #19)
+    if social.complete_signup_from_token(payload.token):
+        return MessageResponse(message="가입이 완료되었습니다. 소셜 계정으로 로그인해 주세요.")
     service.verify_email(payload.token)
     return MessageResponse(message="이메일 인증이 완료되었습니다.")
 

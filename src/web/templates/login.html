@@ -1,6 +1,7 @@
-{# 2026-11-04 - smart-voca - P-02 로그인. 소셜 버튼은 M8에서 추가. 파일 위치: src/web/templates/login.html #}
+{# 2026-11-04 - smart-voca - P-02 로그인. 소셜 버튼은 설정된 제공자만 표시한다 (M8). 파일 위치: src/web/templates/login.html #}
 {% extends "base.html" %}
 {% block content %}
+{% if social_error %}<p class="message error" id="social-error" role="alert">{{ social_error }}</p>{% endif %}
 <form id="login-form">
   <div class="field">
     <label for="email">이메일</label>
@@ -15,6 +16,7 @@
   <button type="submit">로그인</button>
 </form>
 {% if withdrawn %}<p class="message ok" id="withdrawn-notice">탈퇴가 완료되었습니다. 회원 데이터를 모두 삭제했습니다.</p>{% endif %}
+{% include "social_buttons.html" %}
 <p class="links">계정이 없으신가요? <a href="/signup">가입하기</a></p>
 <p class="links"><a href="/forgot-password">비밀번호를 잊으셨나요?</a></p>
 {% endblock %}

@@ -16,6 +16,7 @@ from web.routers import (
     auth_api,
     health_api,
     me_api,
+    social_api,
     pages,
     plans_api,
     settings_api,
@@ -24,6 +25,7 @@ from web.routers import (
     words_api,
 )
 from web.services.mail_service import Mailer, create_mailer
+from web.services.social_providers import SocialProvider, create_social_providers
 from web.settings import Settings
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -37,7 +39,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.engine.dispose()
 
 
-def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    mailer: Mailer | None = None,
+    social_providers: dict[str, SocialProvider] | None = None,
+) -> FastAPI:
     # uvicorn --factory로 실행한다. import만으로 설정을 읽지 않아 .env 없는 환경에서도 import할 수 있다
     app_settings = settings if settings is not None else Settings()
 
@@ -54,12 +60,17 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.state.session_factory = make_session_factory(app.state.engine)
     # 테스트는 보낸 메일을 확인하려고 기록용 구현을 넘긴다
     app.state.mailer = mailer if mailer is not None else create_mailer(app_settings)
+    # 키가 있는 제공자만 켠다. 테스트는 가짜 제공자를 넘긴다 (이슈 #19)
+    app.state.social_providers = (
+        social_providers if social_providers is not None else create_social_providers(app_settings)
+    )
 
     register_error_handlers(app)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(health_api.router)
     app.include_router(auth_api.router)
     app.include_router(me_api.router)
+    app.include_router(social_api.router)
     app.include_router(wordbooks_api.router)
     app.include_router(words_api.router)
     app.include_router(settings_api.router)

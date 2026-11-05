@@ -1,4 +1,4 @@
-{# 2026-11-05 - smart-voca - A-01 내 계정 (화면 설계 §4.6). 소셜 연결은 M8에서 추가. 파일 위치: src/web/templates/account.html #}
+{# 2026-11-05 - smart-voca - A-01 내 계정 (화면 설계 §4.6). 소셜 연결·해제 포함 (M8). 파일 위치: src/web/templates/account.html #}
 {% extends "member_base.html" %}
 {% block scripts %}<script src="/static/account.js" defer></script>{% endblock %}
 {% block member_content %}
@@ -15,22 +15,51 @@
   </form>
 </section>
 <section class="account-section">
-  <h2>비밀번호 변경</h2>
+  <h2>{{ "비밀번호 변경" if has_password else "비밀번호 설정" }}</h2>
   <form id="password-form" novalidate>
+    {% if has_password %}
     <div class="field">
       <label for="current_password">현재 비밀번호</label>
       <input id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="128" required>
       <p class="field-error" id="current_password-error" hidden></p>
     </div>
+    {% else %}
+    <p class="help" id="no-password-note">소셜 계정으로 가입해 비밀번호가 없습니다. 새 비밀번호를 설정하면 이메일로도 로그인하고 탈퇴할 수 있습니다.</p>
+    {% endif %}
     <div class="field">
       <label for="new_password">새 비밀번호</label>
       <input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="new_password-help" required>
       <p class="help" id="new_password-help">8자 이상, 128자 이하로 입력하세요. 바꾸면 다른 기기에서는 로그아웃됩니다.</p>
       <p class="field-error" id="new_password-error" hidden></p>
     </div>
-    <button type="submit">비밀번호 바꾸기</button>
+    <button type="submit">{{ "비밀번호 바꾸기" if has_password else "비밀번호 설정" }}</button>
   </form>
 </section>
+{% if social_rows %}
+<section class="account-section" id="social-section">
+  <h2>소셜 계정 연결</h2>
+  {% if social_linked_notice %}<p class="message ok" id="social-linked-notice">소셜 계정을 연결했습니다.</p>{% endif %}
+  {% if social_error %}<p class="message error" id="social-error" role="alert">{{ social_error }}</p>{% endif %}
+  {% if has_password %}
+  <div class="field">
+    <label for="social_password">연결하려면 비밀번호를 입력하세요</label>
+    <input id="social_password" type="password" autocomplete="current-password" maxlength="128">
+  </div>
+  {% endif %}
+  <ul class="social-list">
+    {% for row in social_rows %}
+    <li data-provider="{{ row.name }}">
+      <span>{{ row.label }}: <strong>{{ "연결됨" if row.linked else "연결 안 됨" }}</strong></span>
+      {% if row.linked %}
+      <button type="button" class="secondary social-unlink" data-provider="{{ row.name }}">해제</button>
+      {% else %}
+      <button type="button" class="social-link" data-provider="{{ row.name }}">연결</button>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 <section class="account-section">
   <h2>모든 기기에서 로그아웃</h2>
   <p class="help">이 기기를 포함해 로그인된 모든 기기를 로그아웃합니다.</p>

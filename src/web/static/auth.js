@@ -206,6 +206,12 @@ async function submitReset(form) {
   return result;
 }
 
+async function submitSocialComplete(form) {
+  const result = await callApi("/social/complete", { body: { email: form.elements.email.value } });
+  if (result.ok) showMessage(result.data.message, "ok");
+  return result;
+}
+
 async function verifyEmailFromLink() {
   const status = document.getElementById("verify-status");
   status.textContent = "인증을 확인하는 중입니다.";
@@ -218,7 +224,7 @@ async function verifyEmailFromLink() {
   }
   const result = await callApi("/verify-email", { body: { token } });
   status.textContent = result.ok
-    ? "이메일 인증이 완료되었습니다."
+    ? result.data.message
     : `${result.error.message} 로그인한 뒤 인증 메일을 다시 받을 수 있습니다.`;
 }
 
@@ -252,6 +258,7 @@ function start() {
   const page = document.querySelector("main")?.dataset.page;
   if (page === "login") setupForm(document.getElementById("login-form"), submitLogin);
   if (page === "signup") setupForm(document.getElementById("signup-form"), submitSignup);
+  if (page === "signup-social") setupForm(document.getElementById("social-complete-form"), submitSocialComplete);
   if (page === "forgot-password") setupForm(document.getElementById("forgot-form"), submitForgot);
   if (page === "reset-password") {
     readResetToken();

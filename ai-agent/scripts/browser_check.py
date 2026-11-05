@@ -19,7 +19,7 @@ import urllib.request
 from pathlib import Path
 
 from browser_check_lib import PROJECT_ROOT, Browser, Report, Session, find_browser, free_port, wait_for_url
-from browser_checks_account import check_account_flow
+from browser_checks_account import check_account_flow, check_social_ui
 from browser_checks_auth import check_auth_flow
 from browser_checks_learning import check_home_and_memorize
 from browser_checks_settings import check_settings_flow
@@ -37,6 +37,10 @@ def run_checks(work_dir: Path, report: Report) -> None:
         "PUBLIC_BASE_URL": base_url,
         # 서버 출력을 UTF-8로 고정해 한글 Windows에서도 메일 로그를 같은 방식으로 읽는다
         "PYTHONIOENCODING": "utf-8",
+        # 소셜 버튼 화면을 확인하려는 가짜 키다. 제공자 서버는 부르지 않는다 (이슈 #19)
+        "GOOGLE_CLIENT_ID": "browser-check-google-id",
+        "GOOGLE_CLIENT_SECRET": "browser-check-google-secret",
+        "KAKAO_REST_API_KEY": "browser-check-kakao-key",
     }
     subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
@@ -89,6 +93,7 @@ def run_checks(work_dir: Path, report: Report) -> None:
             check_home_and_memorize(session)
             check_tests_flow(session)
             check_account_flow(session)
+            check_social_ui(session)
             report.check("처리되지 않은 스크립트 오류 없음", not browser.script_errors, browser.script_errors)
         finally:
             server.terminate()

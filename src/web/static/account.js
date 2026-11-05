@@ -1,4 +1,4 @@
-// 2026-11-05 - smart-voca - 내 계정 화면: 표시 이름, 비밀번호 변경, 모든 기기 로그아웃, 탈퇴 (화면 설계 §4.6)
+// 2026-11-05 - smart-voca - 내 계정 화면: 표시 이름, 비밀번호 변경, 소셜 연결, 모든 기기 로그아웃, 탈퇴 (화면 설계 §4.6)
 // 파일 위치: src/web/static/account.js
 
 "use strict";
@@ -17,8 +17,10 @@ async function submitName(form) {
 }
 
 async function submitPassword(form) {
+  // 비밀번호가 없는 소셜 전용 계정은 현재 비밀번호 칸이 없다
+  const currentField = form.elements.current_password;
   const result = await writeJson(`${ME_API}/password`, "POST", {
-    current_password: form.elements.current_password.value,
+    current_password: currentField ? currentField.value : "",
     new_password: form.elements.new_password.value,
   });
   if (result === null) return { ok: true };
@@ -66,7 +68,50 @@ function setupLogoutAll() {
   });
 }
 
+const SOCIAL_API = "/api/v1/auth/social";
+
+async function linkProvider(button) {
+  const passwordInput = document.getElementById("social_password");
+  button.disabled = true;
+  const result = await writeJson(`${SOCIAL_API}/${button.dataset.provider}/link`, "POST", {
+    password: passwordInput ? passwordInput.value : "",
+  });
+  if (result === null) return;
+  if (!result.ok) {
+    button.disabled = false;
+    // 비밀번호 오류는 위쪽 알림에 한글로 나온다
+    const fields = result.error.fields ?? {};
+    showMessage(fields.current_password ?? describeError(result.error), "error");
+    return;
+  }
+  window.location.assign(result.data.authorize_url);
+}
+
+async function unlinkProvider(button) {
+  if (!requireVerified()) return;
+  if (!window.confirm("이 소셜 계정의 연결을 해제할까요?")) return;
+  button.disabled = true;
+  const result = await writeJson(`${SOCIAL_API}/${button.dataset.provider}`, "DELETE");
+  if (result === null) return;
+  if (!result.ok) {
+    button.disabled = false;
+    showMessage(describeError(result.error), "error");
+    return;
+  }
+  window.location.assign("/account");
+}
+
+function setupSocial() {
+  document.querySelectorAll(".social-link").forEach((button) => {
+    button.addEventListener("click", () => linkProvider(button));
+  });
+  document.querySelectorAll(".social-unlink").forEach((button) => {
+    button.addEventListener("click", () => unlinkProvider(button));
+  });
+}
+
 setupForm(document.getElementById("name-form"), submitName);
 setupForm(document.getElementById("password-form"), submitPassword);
 setupForm(document.getElementById("delete-form"), submitDelete);
 setupLogoutAll();
+setupSocial();

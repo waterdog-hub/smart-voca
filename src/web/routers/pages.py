@@ -11,10 +11,11 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from web.dependencies import DbSession, OptionalSession
+from web.dependencies import OAUTH_COOKIE_NAME, DbSession, OptionalSession, SocialServiceDep
 from web.repositories import plan_repository, setting_repository, test_repository
 from web.schemas.common import MAX_DB_INT
 from web.services.plan_service import KOREA_TIME, PlanService
+from web.services.social_providers import PROVIDER_LABELS, PROVIDER_NAMES
 from web.services.setting_service import COUNT_FIELDS, DIRECTION_CHOICES, FORMAT_CHOICES
 from web.services.test_service import (
     DEFAULT_QUESTION_COUNT,
@@ -29,8 +30,26 @@ router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent / "templates")
 
 
+SOCIAL_ERROR_MESSAGES = {
+    "state": "로그인 시간이 지났거나 요청이 올바르지 않습니다. 다시 시도해 주세요.",
+    "denied": "소셜 로그인을 취소했습니다.",
+    "provider": "제공자와 통신하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "taken": "이미 다른 계정에 연결된 소셜 계정입니다.",
+    "busy": "처리 중 충돌이 있었습니다. 다시 시도해 주세요.",
+    "unavailable": "사용할 수 없는 로그인 방식입니다.",
+}
+
+
+def _social_buttons(request: Request) -> list[dict[str, str]]:
+    configured = request.app.state.social_providers
+    return [{"name": name, "label": PROVIDER_LABELS[name]} for name in PROVIDER_NAMES if name in configured]
+
+
 def _render(request: Request, template_name: str, **context: object) -> Response:
     context["demo_mode"] = request.app.state.settings.auto_verifies_email
+    context["social_buttons"] = _social_buttons(request)
+    # 알려진 코드만 문구로 바꾼다. 주소의 다른 값은 화면에 넣지 않는다
+    context["social_error"] = SOCIAL_ERROR_MESSAGES.get(request.query_params.get("social_error", ""))
     return templates.TemplateResponse(request, template_name, context)
 
 
@@ -259,9 +278,21 @@ def settings_page(request: Request, current: OptionalSession) -> Response:
 
 
 @router.get("/account")
-def account_page(request: Request, current: OptionalSession) -> Response:
-    email = current.user.email if current else ""
-    return _render_member_page(request, current, "account.html", "내 계정", "account", email=email)
+def account_page(request: Request, current: OptionalSession, social: SocialServiceDep) -> Response:
+    if current is None:
+        return _login_redirect(request)
+    linked = set(social.linked_providers(current.user))
+    return _render_member_page(
+        request,
+        current,
+        "account.html",
+        "내 계정",
+        "account",
+        email=current.user.email,
+        has_password=current.user.password_hash is not None,
+        social_rows=[{**button, "linked": button["name"] in linked} for button in _social_buttons(request)],
+        social_linked_notice=request.query_params.get("social") == "linked",
+    )
 
 
 @router.get("/login")
@@ -291,6 +322,17 @@ def signup_page(request: Request, current: OptionalSession) -> Response:
     if current is not None:
         return RedirectResponse("/", status_code=303)
     return _render(request, "signup.html", title="가입", page="signup")
+
+
+@router.get("/signup/social")
+def signup_social_page(request: Request, social: SocialServiceDep) -> Response:
+    # 소셜 로그인에서 이메일을 받지 못했을 때만 연다. 대기 상태가 없으면 로그인으로 보낸다 (D-M806)
+    row = social.get_pending_signup(request.cookies.get(OAUTH_COOKIE_NAME))
+    if row is None:
+        return RedirectResponse("/login?social_error=state", status_code=303)
+    return _render(
+        request, "signup_social.html", title="이메일 입력", page="signup-social", provider=row.pending_provider
+    )
 
 
 @router.get("/signup/sent")
