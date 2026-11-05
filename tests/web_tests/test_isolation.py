@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-05 - smart-voca - 회원 A가 회원 B의 단어와 담은 단어장에 접근하지 못하는지 확인한다 (D-A09)
+# 2026-11-05 - smart-voca - 회원 A가 회원 B의 단어, 담은 단어장, 진도, 암기 기록에 접근하지 못하는지 확인한다 (D-A09, NFR-SEC-07)
 # 파일 위치: tests/web_tests/test_isolation.py
 
 import unittest
@@ -9,10 +9,13 @@ from web_tests.support import AuthTestCase
 
 from sqlalchemy import select
 
-from web.db.tables import UserWordbook, Word
+from web.db.tables import PlanItem, StudyRecord, UserWordbook, Word
 
 WORDS_API = "/api/v1/words"
 WORDBOOKS_API = "/api/v1/wordbooks"
+PLANS_API = "/api/v1/plans"
+ITEMS_API = "/api/v1/plan-items"
+PROGRESS_API = "/api/v1/progress"
 
 
 class WordIsolationTest(AuthTestCase):
@@ -76,6 +79,50 @@ class WordIsolationTest(AuthTestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()["error"]["code"], "CSRF_INVALID")
+
+
+class PlanIsolationTest(AuthTestCase):
+    """회원 A의 진도 항목과 암기 기록을 회원 B가 보거나 바꾸지 못한다. 없는 자원과 같은 404로 답한다."""
+
+    def setUp(self):
+        super().setUp()
+        self.owner_headers = self.verified_member("owner@example.com")
+        self.insert_words({"alpha": "첫째", "bravo": "둘째"}, email="owner@example.com")
+        created = self.client.post(PLANS_API, headers=self.owner_headers)
+        self.assertEqual(created.status_code, 201, created.text)
+        self.owner_item_ids = [item["id"] for item in created.json()["items"]]
+        self.other = self.make_auth_client()
+        self.other_headers = self.verified_member("other@example.com", client=self.other)
+
+    def test_other_member_cannot_mark_an_item_and_gets_the_same_404_as_a_missing_item(self):
+        owner_item = self.owner_item_ids[0]
+        missing_item = max(self.owner_item_ids) + 1000
+        stolen = self.other.patch(f"{ITEMS_API}/{owner_item}", json={"done": True}, headers=self.other_headers)
+        missing = self.other.patch(f"{ITEMS_API}/{missing_item}", json={"done": True}, headers=self.other_headers)
+        self.assertEqual((stolen.status_code, missing.status_code), (404, 404))
+        self.assertEqual(stolen.json(), missing.json())
+        with self.db() as db:
+            self.assertEqual(db.scalars(select(PlanItem.done).where(PlanItem.id == owner_item)).one(), False)
+            self.assertEqual(db.scalars(select(StudyRecord)).all(), [])
+
+    def test_other_member_cannot_send_an_item_to_the_back(self):
+        response = self.other.patch(
+            f"{ITEMS_API}/{self.owner_item_ids[0]}", json={"later": True}, headers=self.other_headers
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_other_member_sees_no_plans_and_no_progress_of_the_owner(self):
+        self.assertEqual(self.other.get(PLANS_API).json()["items"], [])
+        self.assertEqual(self.other.get(f"{PLANS_API}/1").status_code, 404)
+        progress = self.other.get(PROGRESS_API).json()
+        self.assertEqual(progress["total_words"], 0)
+        self.assertEqual(progress["memorized_words"], 0)
+
+    def test_other_member_creating_a_plan_does_not_touch_the_owners_plan(self):
+        self.assertEqual(self.other.post(PLANS_API, headers=self.other_headers).status_code, 409)
+        with self.db() as db:
+            ids = db.scalars(select(PlanItem.id).order_by(PlanItem.id)).all()
+        self.assertEqual(ids, sorted(self.owner_item_ids))
 
 
 if __name__ == "__main__":
