@@ -1,2 +1,5 @@
 # 개발·테스트에만 필요한 패키지. 운영 패키지를 함께 설치한다.
 -r requirements.txt
+# 웹 글꼴 줄이기 (ai-agent/scripts/make_fonts.py). 서비스 실행에는 필요 없다.
+fonttools==4.68.0
+brotli==1.2.1

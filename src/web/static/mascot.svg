@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- 마스코트 "보카": 동글동글한 아기 고양이. 테마 색과 상관없이 같은 모습이다 (이슈 #21) -->
+  <ellipse cx="50" cy="94" rx="28" ry="4" fill="#000" opacity="0.08"/>
+  <!-- 귀: 몸통보다 먼저 그려 아래쪽이 몸통에 가려지게 한다 -->
+  <path d="M15 44 L18 12 L45 27 Z" fill="#ffe9cf" stroke="#7a4a2b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M85 44 L82 12 L55 27 Z" fill="#ffe9cf" stroke="#7a4a2b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M22 36 L24 21 L37 29 Z" fill="#ffb3c1" stroke-linejoin="round"/>
+  <path d="M78 36 L76 21 L63 29 Z" fill="#ffb3c1" stroke-linejoin="round"/>
+  <ellipse cx="50" cy="60" rx="37" ry="31" fill="#ffe9cf" stroke="#7a4a2b" stroke-width="4"/>
+  <!-- 이마 줄무늬 -->
+  <path d="M50 31 L50 40 M42 33 L43 40 M58 33 L57 40" stroke="#f2a65a" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <ellipse cx="36" cy="56" rx="4.8" ry="5.8" fill="#3b2a20"/>
+  <ellipse cx="64" cy="56" rx="4.8" ry="5.8" fill="#3b2a20"/>
+  <circle cx="37.8" cy="53.8" r="1.8" fill="#fff"/>
+  <circle cx="65.8" cy="53.8" r="1.8" fill="#fff"/>
+  <!-- 볼터치 -->
+  <ellipse cx="26" cy="67" rx="6.5" ry="4.2" fill="#ffb3c1"/>
+  <ellipse cx="74" cy="67" rx="6.5" ry="4.2" fill="#ffb3c1"/>
+  <!-- 코와 입 -->
+  <path d="M47.2 63 L52.8 63 L50 66.4 Z" fill="#ff8fa3" stroke="#ff8fa3" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M50 66.4 Q50 71 45 71 M50 66.4 Q50 71 55 71" stroke="#3b2a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 수염 -->
+  <path d="M9 57 L22 60 M9 67 L22 65 M91 57 L78 60 M91 67 L78 65" stroke="#7a4a2b" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

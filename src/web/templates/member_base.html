@@ -1,19 +1,27 @@
-{# 2026-11-04 - smart-voca - 회원 화면 공통 틀 (화면 설계 §4.1). 메뉴는 만든 화면만 표시한다. 파일 위치: src/web/templates/member_base.html #}
+{# 2026-11-04 - smart-voca - 회원 화면 공통 틀 (화면 설계 §4.1). 메뉴는 만든 화면만 표시한다. 데스크톱은 왼쪽 메뉴, 휴대폰은 하단 탭 바다 (이슈 #21). 파일 위치: src/web/templates/member_base.html #}
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block body %}
 <div class="member-layout">
   <nav class="member-nav" aria-label="주 메뉴">
-    <a href="/" {% if page == "home" %}aria-current="page"{% endif %}>홈</a>
-    <a href="/wordbooks" {% if page == "wordbooks" %}aria-current="page"{% endif %}>단어장</a>
-    <a href="/words" {% if page == "words" %}aria-current="page"{% endif %}>내 단어</a>
-    <a href="/memorize" {% if page == "memorize" %}aria-current="page"{% endif %}>암기</a>
-    <a href="/tests" {% if page == "tests" %}aria-current="page"{% endif %}>시험</a>
-    <a href="/tests/history" {% if page == "test-history" %}aria-current="page"{% endif %}>시험 기록</a>
-    <a href="/settings" {% if page == "settings" %}aria-current="page"{% endif %}>설정</a>
-    <a href="/account" {% if page == "account" %}aria-current="page"{% endif %}>내 계정</a>
-    <div class="member-nav-user">
-      <span>{{ display_name }} 님</span>
-      <button type="button" id="logout-button" class="secondary">로그아웃</button>
+    <div class="nav-primary">
+      <a href="/" {% if page == "home" %}aria-current="page"{% endif %}>{{ icon("home") }}<span>홈</span></a>
+      <a href="/wordbooks" {% if page == "wordbooks" %}aria-current="page"{% endif %}>{{ icon("books") }}<span>단어장</span></a>
+      <a href="/memorize" {% if page == "memorize" %}aria-current="page"{% endif %}>{{ icon("cards") }}<span>암기</span></a>
+      <a href="/tests" {% if page == "tests" %}aria-current="page"{% endif %}>{{ icon("check") }}<span>시험</span></a>
+    </div>
+    <button type="button" id="nav-more-button" class="nav-more-button" aria-expanded="false" aria-controls="nav-more-panel">{{ icon("more") }}<span>더보기</span></button>
+    <div class="nav-more" id="nav-more-panel">
+      <div class="nav-secondary">
+        <a href="/words" {% if page == "words" %}aria-current="page"{% endif %}>{{ icon("list") }}<span>내 단어</span></a>
+        <a href="/tests/history" {% if page == "test-history" %}aria-current="page"{% endif %}>{{ icon("clock") }}<span>시험 기록</span></a>
+        <a href="/settings" {% if page == "settings" %}aria-current="page"{% endif %}>{{ icon("sliders") }}<span>설정</span></a>
+        <a href="/account" {% if page == "account" %}aria-current="page"{% endif %}>{{ icon("user") }}<span>내 계정</span></a>
+      </div>
+      <div class="member-nav-user">
+        <span>{{ display_name }} 님</span>
+        <button type="button" id="logout-button" class="secondary">로그아웃</button>
+      </div>
     </div>
   </nav>
   <main class="member-main" data-page="{{ page }}" data-email-verified="{{ 'true' if email_verified else 'false' }}">
@@ -23,9 +31,10 @@
       <button type="button" id="resend-button" class="secondary">인증 메일 다시 받기</button>
     </div>
     {% endif %}
-    <h1>{{ title }}</h1>
+    <h1 class="page-title">{{ title }}</h1>
     <p class="message" id="message" role="alert" hidden></p>
     {% block member_content %}{% endblock %}
   </main>
 </div>
+<script src="/static/nav.js" defer></script>
 {% endblock %}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- 귀여운 책 친구 (하늘). 단어장 카드와 메뉴에 쓴다 (이슈 #21) -->
+  <ellipse cx="50" cy="94" rx="30" ry="4" fill="#000" opacity="0.08"/>
+  <!-- 책장 -->
+  <rect x="22" y="20" width="64" height="70" rx="10" fill="#fffdf6" stroke="#7a4a2b" stroke-width="4"/>
+  <path d="M30 86 L84 86" stroke="#f0e2c4" stroke-width="3" stroke-linecap="round"/>
+  <!-- 표지 -->
+  <rect x="14" y="12" width="66" height="72" rx="12" fill="#8cc8ff" stroke="#7a4a2b" stroke-width="4"/>
+  <path d="M26 12 L26 84" stroke="#4a9be8" stroke-width="5" stroke-linecap="round"/>
+  <!-- 책갈피 리본 -->
+  <path d="M58 6 L72 6 L72 28 L65 22 L58 28 Z" fill="#ff6b8b" stroke="#7a4a2b" stroke-width="3" stroke-linejoin="round"/>
+  <!-- 얼굴 -->
+  <ellipse cx="44" cy="52" rx="4.2" ry="5.2" fill="#3b2a20"/>
+  <ellipse cx="64" cy="52" rx="4.2" ry="5.2" fill="#3b2a20"/>
+  <circle cx="45.6" cy="50" r="1.6" fill="#fff"/>
+  <circle cx="65.6" cy="50" r="1.6" fill="#fff"/>
+  <ellipse cx="36" cy="62" rx="5.5" ry="3.6" fill="#ffb3c1" opacity="0.95"/>
+  <ellipse cx="72" cy="62" rx="5.5" ry="3.6" fill="#ffb3c1" opacity="0.95"/>
+  <path d="M49 63 Q54 69 59 63" stroke="#3b2a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 반짝이 -->
+  <path d="M86 30 L88 36 L94 38 L88 40 L86 46 L84 40 L78 38 L84 36 Z" fill="#fff" stroke="#7a4a2b" stroke-width="2" stroke-linejoin="round"/>
+</svg>

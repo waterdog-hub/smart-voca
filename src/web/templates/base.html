@@ -4,13 +4,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff5f8">
   <title>{{ title }} - smart-voca</title>
+  <link rel="preload" href="/static/fonts/Jua.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/GowunDodum.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/theme.js"></script>
   <script src="/static/auth.js" defer></script>
   {% block scripts %}{% endblock %}
 </head>
 <body>
-  <header class="site-header"><a href="/">smart-voca</a></header>
+  <header class="site-header"><a class="brand" href="/"><span class="brand-mark mascot" aria-hidden="true"></span><span class="brand-name">smart-voca</span></a></header>
   {% if demo_mode %}<p class="demo-notice" id="demo-notice">시연용 서버입니다. 실제 비밀번호와 개인정보를 쓰지 마세요. 입력한 내용은 시연이 끝나면 지웁니다.</p>{% endif %}
   {% block body %}
   <main class="panel" data-page="{{ page }}">

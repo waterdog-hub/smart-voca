@@ -16,6 +16,20 @@ def check_auth_flow(session: Session) -> None:
     check("로그인 없이 홈을 열면 시작 화면 표시", browser.js("document.querySelector('main').dataset.page") == "landing")
     check("시작 화면에 가입과 로그인 링크", browser.js("!!document.getElementById('landing-signup') && !!document.getElementById('landing-login')"))
     check("개발 환경에는 시연 안내가 없음", browser.js("!document.getElementById('demo-notice')"))
+    # 고양이 발바닥 커서 (이슈 #21): 누를 수 있는 곳과 기본 바탕이 다른 커서를 쓴다
+    check("누를 수 있는 곳에 발바닥(눌림) 커서", "cursor-paw-click" in browser.js("getComputedStyle(document.getElementById('landing-signup')).cursor"))
+    check("기본 바탕에 발바닥 커서", "cursor-paw.svg" in browser.js("getComputedStyle(document.documentElement).cursor"))
+    # 귀여운 글꼴 (이슈 #21): 제목은 주아, 본문은 고운돋움이 실제로 내려받아져 적용된다
+    check("제목 글꼴이 주아", browser.js("getComputedStyle(document.querySelector('h1')).fontFamily").startswith('Jua'))
+    check("본문 글꼴이 고운돋움", browser.js("getComputedStyle(document.body).fontFamily").startswith('"Gowun Dodum"'))
+    check(
+        "주아와 고운돋움 파일을 읽어 옴",
+        browser.wait("document.fonts.check('16px Jua') && document.fonts.check('16px \"Gowun Dodum\"')", timeout=15),
+    )
+    browser.shot("landing_375.png")
+    browser.resize(1280, 800, mobile=False)
+    browser.shot("landing_1280.png")
+    browser.resize(PHONE_WIDTH, 720, mobile=True)
 
     browser.go(f"{base}/signup")
     browser.fill(
@@ -50,11 +64,22 @@ def check_auth_flow(session: Session) -> None:
     browser.ready()
     check("인증 안내 띠 표시", browser.js("!!document.getElementById('verify-banner')"))
     check("세션 쿠키를 자바스크립트에서 읽을 수 없음", "sv_session" not in (browser.js("document.cookie") or ""))
-    gap = browser.js(
-        "document.querySelector('.member-main').getBoundingClientRect().top"
-        "-document.querySelector('.member-nav').getBoundingClientRect().bottom"
+    # 휴대폰에서는 메뉴가 화면 아래에 붙은 탭 바다 (이슈 #21)
+    bar_gap = browser.js("window.innerHeight-document.querySelector('.member-nav').getBoundingClientRect().bottom")
+    check("휴대폰에서 메뉴가 화면 아래 탭 바로 떠 있음", 0 <= bar_gap <= 16, bar_gap)
+    check("탭 바에 홈·단어장·암기·시험·더보기", browser.js(
+        "[...document.querySelectorAll('.nav-primary a, .nav-more-button')].filter(e=>e.getBoundingClientRect().width>0).length"
+    ) == 5)
+    check("더보기는 처음에 닫혀 있음", browser.js("document.getElementById('nav-more-button').getAttribute('aria-expanded')") == "false")
+    browser.click("nav-more-button")
+    check(
+        "더보기를 열면 내 단어·시험 기록·설정·내 계정과 로그아웃이 보임",
+        browser.js("document.getElementById('nav-more-panel').getBoundingClientRect().height>0")
+        and browser.js("document.querySelectorAll('#nav-more-panel a').length") == 4,
     )
-    check("짧은 휴대폰 화면에서 메뉴 아래가 벌어지지 않음", abs(gap) <= 1, gap)
+    browser.shot("nav_more_375.png")
+    browser.js("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))")
+    check("Esc로 더보기가 닫힘", browser.js("document.getElementById('nav-more-button').getAttribute('aria-expanded')") == "false")
     browser.shot("home_unverified_375.png")
 
     browser.click("resend-button")

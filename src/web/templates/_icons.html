@@ -1,0 +1,14 @@
+{# 2026-11-05 - smart-voca - 메뉴 아이콘 조각. 귀여운 느낌을 위해 이모지를 쓴다 (이슈 #21). 장식이라 스크린 리더에는 숨긴다. 파일 위치: src/web/templates/_icons.html #}
+{% macro icon(name) -%}
+<span class="nav-icon" data-icon="{{ name }}" aria-hidden="true">
+{%- if name == "home" %}🏠
+{%- elif name == "books" %}
+{%- elif name == "list" %}📒
+{%- elif name == "cards" %}🃏
+{%- elif name == "check" %}✏️
+{%- elif name == "clock" %}🏅
+{%- elif name == "sliders" %}🎨
+{%- elif name == "user" %}🙂
+{%- elif name == "more" %}✨
+{%- endif %}</span>
+{%- endmacro %}

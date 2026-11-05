@@ -298,6 +298,7 @@ smart-voca/
 - **단어 중복 기준**: 대소문자만 다른 단어(`Apple`과 `apple`)는 같은 단어로 본다 (설계서 D-24).
 - **Git 작성자 설정**: 전역 설정이 없어 저장소를 복제한 PC마다 `user.name`과 `user.email`을 저장소 설정으로 넣는다. 이메일은 개인 주소가 공개되지 않도록 GitHub noreply 주소를 쓴다 (인수인계 문서 §5).
 - **개발용 메일**: 개발 환경은 메일을 보내지 않고 서버 콘솔에 인증 링크를 출력한다. 운영은 발송 업체를 정해 구현할 때까지(M10) 발송이 실패 처리된다. 시연 환경은 메일을 보내지 않아 비밀번호 재설정을 쓸 수 없다 (이슈 #18).
+- **디자인**: 귀여운 학습 앱 스타일이다 (이슈 #21, 화면 설계 §4.7). 색은 `src/web/static/app.css` 맨 위의 테마 변수, 마스코트·아이콘·커서는 `static/*.svg`, 글꼴(주아, 고운돋움)은 `static/fonts/`에 저작권·라이선스(SIL OFL)와 함께 있다. 글꼴을 다시 만들려면 `ai-agent/scripts/make_fonts.py`를 쓴다(개발용 `fonttools`, `brotli`). 화면을 바꾸면 `browser_check.py`와 스크린샷으로 확인하고, 메뉴 링크는 `<a href aria-current>` 형태를 유지한다 (기존 테스트가 이 형태를 본다).
 - **소셜 로그인**: 구글·카카오 키(`GOOGLE_CLIENT_ID/SECRET`, `KAKAO_REST_API_KEY/CLIENT_SECRET`)가 `.env`에 있는 제공자만 켜지고 시연 환경에서는 꺼진다. 코드는 가짜 제공자와 모의 전송으로만 확인했다. 앱 등록 절차는 `ai-agent/claude/261104_웹서비스 전환/운영_261105_소셜 로그인 앱 등록 안내.md` (이슈 #19). 키 값은 채팅·이슈·커밋에 붙여 넣지 않는다.
 - **공용 단어장**: 회원은 단어를 직접 추가·수정·삭제하지 않고 운영자가 넣은 단어장을 담고 제외한다 (이슈 #17, 검토 문서 `검토_261105_MW 공용 단어장 결정.md`). 단어장은 `data/wordbooks.json`에 적고 `load_wordbooks.py`로 DB에 넣는다. 담기는 회원의 `words`로 복사하므로 단어장을 고쳐도 이미 담은 단어는 바뀌지 않는다. 웹 테스트에서 단어가 필요하면 `AuthTestCase.insert_words`와 `insert_wordbook`을 쓴다.
 - **새 쓰기 API**: 회원 데이터를 바꾸는 API에는 `web.dependencies.VerifiedWrite`를 붙인다. 로그인, CSRF, 이메일 인증을 함께 검사한다.

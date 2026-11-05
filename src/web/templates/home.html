@@ -1,16 +1,19 @@
-{# 2026-11-04 - smart-voca - H-01 홈. 서버가 그리고 일차 생성만 자바스크립트로 호출한다 (D-UI05). 파일 위치: src/web/templates/home.html #}
+{# 2026-11-04 - smart-voca - H-01 홈. 서버가 그리고 일차 생성만 자바스크립트로 호출한다 (D-UI05). 숫자 타일과 큰 카드로 다음 행동이 보이게 한다 (이슈 #21). 파일 위치: src/web/templates/home.html #}
 {% extends "member_base.html" %}
 {% block scripts %}<script src="/static/plans.js" defer></script>{% endblock %}
 {% block member_content %}
-<section class="result-panel" aria-labelledby="today-title">
+<section class="hero-card" aria-labelledby="today-title">
+  <span class="mascot mascot-hero" aria-hidden="true"></span>
+  <p class="hero-label">🎫 오늘의 티켓</p>
+  <p class="hero-greeting">안녕하세요, {{ display_name }} 님</p>
   <h2 id="today-title">오늘 할 일</h2>
   {% if progress.total_words == 0 %}
   <p id="home-state" data-state="no-words">공부할 단어장을 먼저 담으세요.</p>
-  <a class="button-link" href="/wordbooks">단어장 고르기</a>
+  <a class="button-link primary" href="/wordbooks">단어장 고르기</a>
   {% elif not progress.day_complete %}
   <p id="home-state" data-state="in-progress">{{ progress.current_day }}일차를 외우는 중입니다. {{ progress.day_total }}개 중 {{ progress.day_done }}개를 외웠습니다.</p>
   <progress max="{{ progress.day_total }}" value="{{ progress.day_done }}" aria-label="현재 일차 진행률"></progress>
-  <a class="button-link" id="continue-link" href="/memorize">이어서 암기하기</a>
+  <a class="button-link primary" id="continue-link" href="/memorize">이어서 암기하기</a>
   {% else %}
   {% if progress.current_day == 0 %}
   <p id="home-state" data-state="ready">아직 진도가 없습니다. 첫 일차를 만들어 시작하세요.</p>
@@ -20,21 +23,31 @@
   <button type="button" data-create-plan class="needs-verified">다음 일차 만들기</button>
   {% endif %}
 </section>
-<section class="result-panel" aria-labelledby="overall-title">
-  <h2 id="overall-title">전체 진행률</h2>
-  <p id="overall-progress">전체 {{ progress.total_words }}개 중 {{ progress.memorized_words }}개를 외웠습니다.</p>
-  {% if progress.total_words %}
-  <progress max="{{ progress.total_words }}" value="{{ progress.memorized_words }}" aria-label="전체 진행률"></progress>
-  {% endif %}
-</section>
-<section class="result-panel" aria-labelledby="latest-test-title">
-  <h2 id="latest-test-title">최근 시험</h2>
-  {% if latest_test %}
-  <p id="latest-test">{{ latest_test.taken_at }}, {{ latest_test.format_label }}, {{ latest_test.direction_label }}, {{ latest_test.total }}문항 중 {{ latest_test.score }}개 ({{ latest_test.percent }}%)</p>
-  <a href="/tests/history">시험 기록 보기</a>
-  {% else %}
-  <p id="latest-test-empty">아직 시험 기록이 없습니다.</p>
-  <a href="/tests">시험 보러 가기</a>
-  {% endif %}
-</section>
+
+<div class="stat-grid">
+  <section class="stat-tile" aria-labelledby="day-title">
+    <h2 id="day-title"><span aria-hidden="true">🔥</span> 현재 일차</h2>
+    <p class="stat-number">{% if progress.current_day %}{{ progress.current_day }}<span class="stat-unit">일차</span>{% else %}-{% endif %}</p>
+  </section>
+  <section class="stat-tile" aria-labelledby="overall-title">
+    <h2 id="overall-title"><span aria-hidden="true">🌱</span> 전체 진행률</h2>
+    <p class="stat-number">{{ progress.memorized_words }}<span class="stat-unit">/ {{ progress.total_words }}</span></p>
+    <p class="help" id="overall-progress">전체 {{ progress.total_words }}개 중 {{ progress.memorized_words }}개를 외웠습니다.</p>
+    {% if progress.total_words %}
+    <progress max="{{ progress.total_words }}" value="{{ progress.memorized_words }}" aria-label="전체 진행률"></progress>
+    {% endif %}
+  </section>
+  <section class="stat-tile" aria-labelledby="latest-test-title">
+    <h2 id="latest-test-title"><span aria-hidden="true">🎯</span> 최근 시험</h2>
+    {% if latest_test %}
+    <p class="stat-number">{{ latest_test.percent }}<span class="stat-unit">%</span></p>
+    <p class="help" id="latest-test">{{ latest_test.taken_at }}, {{ latest_test.format_label }}, {{ latest_test.direction_label }}, {{ latest_test.total }}문항 중 {{ latest_test.score }}개 ({{ latest_test.percent }}%)</p>
+    <a href="/tests/history">시험 기록 보기</a>
+    {% else %}
+    <p class="stat-number">-</p>
+    <p class="help" id="latest-test-empty">아직 시험 기록이 없습니다.</p>
+    <a href="/tests">시험 보러 가기</a>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

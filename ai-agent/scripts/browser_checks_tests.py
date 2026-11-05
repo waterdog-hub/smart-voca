@@ -140,12 +140,14 @@ def check_tests_flow(session: Session) -> None:
     check("입력칸에 포커스", browser.js("document.activeElement.id") == "text-answer-input")
     browser.press(*KEY_2)
     check("입력칸에서 숫자는 글자로 입력", browser.js("document.getElementById('text-answer-input').value") == "2")
+    # 문항 순서는 무작위라 Enter로 넘어가기 전의 첫 문항도 함께 모아야 HTML 단어를 빠뜨리지 않는다
+    first_question = browser.text("question-text")
     before = browser.text("question-progress-text")
     browser.press(*ENTER)
     check("입력칸에서 Enter로 다음 문항", browser.wait(f"document.getElementById('question-progress-text').textContent!=={json.dumps(before)}"))
     check("다음 문항은 입력칸이 비어 있음", browser.js("document.getElementById('text-answer-input').value") == "")
 
-    questions = []
+    questions = [first_question]
     for _ in range(5):
         questions.append(browser.text("question-text"))
         if browser.text("next-question") == "제출":

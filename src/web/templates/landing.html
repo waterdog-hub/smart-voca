@@ -1,14 +1,17 @@
-{# 2026-11-04 - smart-voca - P-01 시작 화면. 파일 위치: src/web/templates/landing.html #}
+{# 2026-11-04 - smart-voca - P-01 시작 화면. 소개와 세 가지 특징 카드 (이슈 #21). 파일 위치: src/web/templates/landing.html #}
 {% extends "base.html" %}
 {% block content %}
-<p>준비된 영어 단어장을 고르고, 날마다 암기 진도를 받아 외우고, 시험으로 확인하는 학습 서비스입니다.</p>
-<ul>
-  <li>단어장: 준비된 단어장 중에서 골라 담기</li>
-  <li>암기: 하루 분량을 신규, 복습, 오답 단어로 자동 구성</li>
-  <li>시험: 객관식과 주관식, 틀린 단어는 다음 진도에 다시 등장</li>
+<div class="landing-hero">
+  <span class="mascot mascot-lg" aria-hidden="true"></span>
+  <p class="landing-lead">준비된 영어 단어장을 고르고, 날마다 암기 진도를 받아 외우고, 시험으로 확인하는 학습 서비스입니다.</p>
+</div>
+<ul class="feature-list">
+  <li><strong><span aria-hidden="true">📚</span> 단어장</strong><span>준비된 단어장 중에서 골라 담기</span></li>
+  <li><strong><span aria-hidden="true">🃏</span> 암기</strong><span>하루 분량을 신규, 복습, 오답 단어로 자동 구성</span></li>
+  <li><strong><span aria-hidden="true">✏️</span> 시험</strong><span>객관식과 주관식, 틀린 단어는 다음 진도에 다시 등장</span></li>
 </ul>
 <div class="button-row">
-  <a class="button-link" id="landing-signup" href="/signup">가입하기</a>
+  <a class="button-link primary" id="landing-signup" href="/signup">가입하기</a>
   <a class="button-link" id="landing-login" href="/login">로그인</a>
 </div>
 {% endblock %}
