@@ -10,6 +10,7 @@
     <a href="/tests" {% if page == "tests" %}aria-current="page"{% endif %}>시험</a>
     <a href="/tests/history" {% if page == "test-history" %}aria-current="page"{% endif %}>시험 기록</a>
     <a href="/settings" {% if page == "settings" %}aria-current="page"{% endif %}>설정</a>
+    <a href="/account" {% if page == "account" %}aria-current="page"{% endif %}>내 계정</a>
     <div class="member-nav-user">
       <span>{{ display_name }} 님</span>
       <button type="button" id="logout-button" class="secondary">로그아웃</button>

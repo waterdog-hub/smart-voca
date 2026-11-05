@@ -1,4 +1,4 @@
-// 2026-11-04 - smart-voca - 가입, 로그인, 인증, 로그아웃 화면의 동작
+// 2026-11-04 - smart-voca - 가입, 로그인, 인증, 비밀번호 재설정, 로그아웃 화면의 동작
 // 파일 위치: src/web/static/auth.js
 
 "use strict";
@@ -165,6 +165,47 @@ async function submitSignup(form) {
   return result;
 }
 
+async function submitForgot(form) {
+  const result = await callApi("/password-reset/request", { body: { email: form.elements.email.value } });
+  if (result.ok) showMessage(result.data.message, "ok");
+  return result;
+}
+
+// 재설정 링크의 토큰은 주소 조각에서 한 번 읽어 변수에만 둔다
+let resetToken = null;
+
+function readResetToken() {
+  const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+  if (token) resetToken = token;
+  // 토큰이 방문 기록과 화면 공유에 남지 않도록 주소에서 지운다
+  window.history.replaceState(null, "", window.location.pathname);
+}
+
+async function submitReset(form) {
+  const newPassword = form.elements.new_password.value;
+  if (newPassword !== form.elements.new_password_again.value) {
+    return {
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: "입력값을 확인해 주세요.",
+        fields: { new_password_again: "새 비밀번호가 서로 다릅니다." },
+      },
+    };
+  }
+  if (!resetToken) {
+    return { ok: false, error: { code: "TOKEN_INVALID", message: "재설정 링크가 올바르지 않습니다. 메일의 링크를 다시 눌러 주세요." } };
+  }
+  const result = await callApi("/password-reset/confirm", { body: { token: resetToken, new_password: newPassword } });
+  if (result.ok) {
+    resetToken = null;
+    form.reset();
+    showMessage(`${result.data.message}`, "ok");
+    window.setTimeout(() => window.location.assign("/login"), 1500);
+  }
+  return result;
+}
+
 async function verifyEmailFromLink() {
   const status = document.getElementById("verify-status");
   status.textContent = "인증을 확인하는 중입니다.";
@@ -211,6 +252,13 @@ function start() {
   const page = document.querySelector("main")?.dataset.page;
   if (page === "login") setupForm(document.getElementById("login-form"), submitLogin);
   if (page === "signup") setupForm(document.getElementById("signup-form"), submitSignup);
+  if (page === "forgot-password") setupForm(document.getElementById("forgot-form"), submitForgot);
+  if (page === "reset-password") {
+    readResetToken();
+    // 같은 탭에 새 링크를 붙여 넣으면 # 뒤만 바뀌어 페이지가 다시 열리지 않는다
+    window.addEventListener("hashchange", readResetToken);
+    setupForm(document.getElementById("reset-form"), submitReset);
+  }
   if (page === "verify-email") {
     verifyEmailFromLink();
     // 같은 탭에 새 링크를 붙여 넣으면 # 뒤만 바뀌어 페이지가 다시 열리지 않는다

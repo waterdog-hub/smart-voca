@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from web.errors import ApiError
 from web.security.csrf import is_valid_csrf_token
+from web.services.account_service import AccountService
 from web.services.auth_service import AuthService, CurrentSession
 from web.settings import Settings
 
@@ -39,6 +40,15 @@ def get_auth_service(request: Request, db: DbSession) -> AuthService:
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+def get_account_service(request: Request, db: DbSession) -> AccountService:
+    return AccountService(
+        db, request.app.state.settings, request.app.state.mailer, get_client_ip(request)
+    )
+
+
+AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 
 
 def get_optional_session(request: Request, service: AuthServiceDep) -> CurrentSession | None:

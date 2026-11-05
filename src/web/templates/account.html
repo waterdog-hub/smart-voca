@@ -1,0 +1,56 @@
+{# 2026-11-05 - smart-voca - A-01 내 계정 (화면 설계 §4.6). 소셜 연결은 M8에서 추가. 파일 위치: src/web/templates/account.html #}
+{% extends "member_base.html" %}
+{% block scripts %}<script src="/static/account.js" defer></script>{% endblock %}
+{% block member_content %}
+<section class="account-section">
+  <h2>내 정보</h2>
+  <p>이메일: <strong id="account-email">{{ email }}</strong></p>
+  <form id="name-form" novalidate>
+    <div class="field">
+      <label for="display_name">표시 이름</label>
+      <input id="display_name" name="display_name" type="text" autocomplete="nickname" maxlength="100" value="{{ display_name }}" required>
+      <p class="field-error" id="display_name-error" hidden></p>
+    </div>
+    <button type="submit">이름 저장</button>
+  </form>
+</section>
+<section class="account-section">
+  <h2>비밀번호 변경</h2>
+  <form id="password-form" novalidate>
+    <div class="field">
+      <label for="current_password">현재 비밀번호</label>
+      <input id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="128" required>
+      <p class="field-error" id="current_password-error" hidden></p>
+    </div>
+    <div class="field">
+      <label for="new_password">새 비밀번호</label>
+      <input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="new_password-help" required>
+      <p class="help" id="new_password-help">8자 이상, 128자 이하로 입력하세요. 바꾸면 다른 기기에서는 로그아웃됩니다.</p>
+      <p class="field-error" id="new_password-error" hidden></p>
+    </div>
+    <button type="submit">비밀번호 바꾸기</button>
+  </form>
+</section>
+<section class="account-section">
+  <h2>모든 기기에서 로그아웃</h2>
+  <p class="help">이 기기를 포함해 로그인된 모든 기기를 로그아웃합니다.</p>
+  <button type="button" id="logout-all-button" class="secondary">모든 기기에서 로그아웃</button>
+</section>
+<section class="account-section danger-zone">
+  <h2>탈퇴</h2>
+  <p class="help">단어, 설정, 진도, 학습 기록, 시험 기록이 모두 삭제되며 되돌릴 수 없습니다. 같은 이메일로 다시 가입할 수는 있습니다.</p>
+  <form id="delete-form" novalidate>
+    <div class="field">
+      <label for="delete_password">비밀번호</label>
+      <input id="delete_password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+      <p class="field-error" id="password-error" hidden></p>
+    </div>
+    <div class="field">
+      <label for="delete_confirm">확인을 위해 "탈퇴"를 입력하세요</label>
+      <input id="delete_confirm" name="confirm" type="text" autocomplete="off" required>
+      <p class="field-error" id="confirm-error" hidden></p>
+    </div>
+    <button type="submit" class="danger">탈퇴하기</button>
+  </form>
+</section>
+{% endblock %}

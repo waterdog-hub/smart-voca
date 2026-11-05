@@ -69,6 +69,20 @@ def build_verification_message(recipient: str, public_base_url: str, token: str)
     )
 
 
+def build_password_reset_message(recipient: str, public_base_url: str, token: str) -> MailMessage:
+    # 인증 메일과 같은 이유로 토큰을 URL 조각(#)에 넣는다
+    link = f"{public_base_url}/reset-password#token={token}"
+    return MailMessage(
+        recipient=recipient,
+        subject="[smart-voca] 비밀번호 재설정 안내",
+        body=(
+            "아래 링크에서 새 비밀번호를 설정해 주세요. 링크는 30분 동안 한 번만 쓸 수 있습니다.\n\n"
+            f"{link}\n\n"
+            "본인이 요청하지 않았다면 이 메일을 무시해 주세요. 비밀번호는 바뀌지 않습니다."
+        ),
+    )
+
+
 def build_already_registered_message(recipient: str, public_base_url: str) -> MailMessage:
     return MailMessage(
         recipient=recipient,

@@ -15,6 +15,7 @@ from web.errors import register_error_handlers
 from web.routers import (
     auth_api,
     health_api,
+    me_api,
     pages,
     plans_api,
     settings_api,
@@ -58,6 +59,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(health_api.router)
     app.include_router(auth_api.router)
+    app.include_router(me_api.router)
     app.include_router(wordbooks_api.router)
     app.include_router(words_api.router)
     app.include_router(settings_api.router)

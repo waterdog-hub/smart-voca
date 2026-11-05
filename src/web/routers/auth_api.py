@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - 가입, 로그인, 로그아웃, 세션 조회, 이메일 인증 API (API 설계 §2)
+# 2026-11-04 - smart-voca - 가입, 로그인, 로그아웃, 세션 조회, 이메일 인증, 비밀번호 재설정 API (API 설계 §2)
 # 파일 위치: src/web/routers/auth_api.py
 
 from fastapi import APIRouter, Request, Response
 
 from web.dependencies import (
+    AccountServiceDep,
     SESSION_COOKIE_NAME,
     AuthServiceDep,
     LoggedInWrite,
@@ -16,6 +17,8 @@ from web.dependencies import (
 from web.schemas.auth import (
     LoginRequest,
     MessageResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     SessionResponse,
     SignupRequest,
     UserSummary,
@@ -75,6 +78,34 @@ def read_session(
             clear_session_cookie(response, service.settings)
         return SessionResponse(user=None)
     return SessionResponse(user=UserSummary.from_user(current.user), csrf_token=current.csrf_token)
+
+
+@router.post("/logout-all", status_code=204)
+def logout_all(current: LoggedInWrite, service: AccountServiceDep) -> Response:
+    service.logout_all(current)
+    response = Response(status_code=204)
+    clear_session_cookie(response, service.settings)
+    return response
+
+
+# 가입 여부와 관계없이 같은 문구를 준다 (D-A04)
+RESET_REQUEST_ACCEPTED_MESSAGE = "가입된 이메일이면 재설정 안내 메일을 보냈습니다. 메일을 확인해 주세요."
+
+
+@router.post("/password-reset/request", status_code=202)
+def request_password_reset(
+    payload: PasswordResetRequest, service: AccountServiceDep
+) -> MessageResponse:
+    service.request_password_reset(payload.email)
+    return MessageResponse(message=RESET_REQUEST_ACCEPTED_MESSAGE)
+
+
+@router.post("/password-reset/confirm")
+def confirm_password_reset(
+    payload: PasswordResetConfirm, service: AccountServiceDep
+) -> MessageResponse:
+    service.confirm_password_reset(payload.token, payload.new_password)
+    return MessageResponse(message="비밀번호를 바꿨습니다. 새 비밀번호로 로그인해 주세요.")
 
 
 @router.post("/verify-email")

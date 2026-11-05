@@ -1,4 +1,4 @@
-{# 2026-11-04 - smart-voca - P-02 로그인. 소셜 버튼은 M8, 재설정 링크는 M7에서 추가. 파일 위치: src/web/templates/login.html #}
+{# 2026-11-04 - smart-voca - P-02 로그인. 소셜 버튼은 M8에서 추가. 파일 위치: src/web/templates/login.html #}
 {% extends "base.html" %}
 {% block content %}
 <form id="login-form">
@@ -14,5 +14,7 @@
   </div>
   <button type="submit">로그인</button>
 </form>
+{% if withdrawn %}<p class="message ok" id="withdrawn-notice">탈퇴가 완료되었습니다. 회원 데이터를 모두 삭제했습니다.</p>{% endif %}
 <p class="links">계정이 없으신가요? <a href="/signup">가입하기</a></p>
+<p class="links"><a href="/forgot-password">비밀번호를 잊으셨나요?</a></p>
 {% endblock %}

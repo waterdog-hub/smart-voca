@@ -62,6 +62,16 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()  # 인증 설계 §3.3
 
 
+def find_display_name_problem(display_name: str) -> str | None:
+    if not display_name:
+        return "표시 이름을 입력해 주세요."
+    if len(display_name) > MAX_DISPLAY_NAME_LENGTH:
+        return f"표시 이름은 {MAX_DISPLAY_NAME_LENGTH}자 이하여야 합니다."
+    if not display_name.isprintable():
+        return "표시 이름에 쓸 수 없는 문자가 있습니다."
+    return None
+
+
 def find_signup_problems(email: str, password: str, display_name: str) -> dict[str, str]:
     problems = {}
     if len(email) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.match(email):
@@ -69,12 +79,9 @@ def find_signup_problems(email: str, password: str, display_name: str) -> dict[s
     password_problem = passwords.find_password_problem(password, email)
     if password_problem:
         problems["password"] = password_problem
-    if not display_name:
-        problems["display_name"] = "표시 이름을 입력해 주세요."
-    elif len(display_name) > MAX_DISPLAY_NAME_LENGTH:
-        problems["display_name"] = f"표시 이름은 {MAX_DISPLAY_NAME_LENGTH}자 이하여야 합니다."
-    elif not display_name.isprintable():
-        problems["display_name"] = "표시 이름에 쓸 수 없는 문자가 있습니다."
+    name_problem = find_display_name_problem(display_name)
+    if name_problem:
+        problems["display_name"] = name_problem
     return problems
 
 

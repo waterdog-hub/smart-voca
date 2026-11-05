@@ -15,6 +15,8 @@ from web.repositories import auth_repository
 ACTION_LOGIN = "login"
 ACTION_SIGNUP = "signup"
 ACTION_RESEND_VERIFICATION = "resend_verification"
+ACTION_PASSWORD_RESET = "password_reset"
+ACTION_PASSWORD_CHECK = "password_check"
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,11 @@ LOGIN_PER_IP = Limit(50, timedelta(minutes=15))
 VERIFICATION_MAIL_PER_ACCOUNT = Limit(1, timedelta(minutes=1))
 # 학교처럼 IP를 공유하는 곳을 고려해 IP 기준은 넉넉하게 둔다 (이슈 #9)
 SIGNUP_PER_IP = Limit(20, timedelta(hours=1))
+# 재설정 메일 폭탄을 막는다. 가입 여부와 상관없이 세므로 제한 응답으로 가입 여부가 드러나지 않는다 (D-M703)
+PASSWORD_RESET_PER_ACCOUNT = Limit(3, timedelta(hours=1))
+PASSWORD_RESET_PER_IP = Limit(20, timedelta(hours=1))
+# 로그인한 세션이 탈취돼도 비밀번호 확인 값을 무차별 대입하지 못하게 한다 (D-M705)
+PASSWORD_CHECK_PER_ACCOUNT = Limit(5, timedelta(minutes=15))
 
 
 def enforce_limit(

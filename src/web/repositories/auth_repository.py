@@ -75,6 +75,27 @@ def delete_session_by_hash(db: Session, token_hash: str) -> None:
     db.execute(delete(AuthSession).where(AuthSession.token_hash == token_hash))
 
 
+def delete_all_sessions(db: Session, user_id: int) -> None:
+    db.execute(delete(AuthSession).where(AuthSession.user_id == user_id))
+
+
+def delete_other_sessions(db: Session, user_id: int, keep_token_hash: str) -> None:
+    db.execute(
+        delete(AuthSession).where(
+            AuthSession.user_id == user_id, AuthSession.token_hash != keep_token_hash
+        )
+    )
+
+
+def delete_user(db: Session, user_id: int) -> None:
+    # 회원 소유 데이터는 외래 키 연쇄 삭제로 함께 지워진다 (데이터 모델 D-W14)
+    db.execute(delete(User).where(User.id == user_id))
+
+
+def get_user_by_id(db: Session, user_id: int) -> User | None:
+    return db.get(User, user_id)
+
+
 def replace_mail_token(
     db: Session, user_id: int, purpose: str, token_hash: str, now: datetime, expires_at: datetime
 ) -> None:

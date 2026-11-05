@@ -33,6 +33,28 @@ class VerifyEmailRequest(BaseModel):
     token: str = Field(min_length=1, max_length=MAX_MAIL_TOKEN_LENGTH)
 
 
+class PasswordResetRequest(BaseModel):
+    email: str = Field(max_length=MAX_REQUEST_EMAIL_LENGTH)
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=1, max_length=MAX_MAIL_TOKEN_LENGTH)
+    new_password: str = Field(max_length=MAX_REQUEST_PASSWORD_LENGTH)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(max_length=MAX_PASSWORD_LENGTH)
+    new_password: str = Field(max_length=MAX_REQUEST_PASSWORD_LENGTH)
+
+
+class AccountDeleteRequest(BaseModel):
+    password: str = Field(max_length=MAX_PASSWORD_LENGTH)
+
+
+class DisplayNameRequest(BaseModel):
+    display_name: str = Field(max_length=MAX_REQUEST_NAME_LENGTH)
+
+
 class UserSummary(BaseModel):
     email: str
     display_name: str

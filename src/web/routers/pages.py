@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-01~P-05, H-01, W-01~W-03, M-01, M-02, T-01~T-03, R-01, S-01)
+# 2026-11-04 - smart-voca - Jinja2 화면 라우트 (P-01~P-07, A-01, H-01, W-01~W-03, M-01, M-02, T-01~T-03, R-01, S-01)
 # 파일 위치: src/web/routers/pages.py
 
 from pathlib import Path
@@ -258,11 +258,32 @@ def settings_page(request: Request, current: OptionalSession) -> Response:
     )
 
 
+@router.get("/account")
+def account_page(request: Request, current: OptionalSession) -> Response:
+    email = current.user.email if current else ""
+    return _render_member_page(request, current, "account.html", "내 계정", "account", email=email)
+
+
 @router.get("/login")
 def login_page(request: Request, current: OptionalSession) -> Response:
     if current is not None:
         return RedirectResponse("/", status_code=303)
-    return _render(request, "login.html", title="로그인", page="login")
+    withdrawn = request.query_params.get("withdrawn") == "1"
+    return _render(request, "login.html", title="로그인", page="login", withdrawn=withdrawn)
+
+
+@router.get("/forgot-password")
+def forgot_password_page(request: Request, current: OptionalSession) -> Response:
+    if current is not None:
+        return RedirectResponse("/account", status_code=303)
+    return _render(request, "forgot_password.html", title="비밀번호 재설정", page="forgot-password")
+
+
+@router.get("/reset-password")
+def reset_password_page(request: Request) -> Response:
+    # 토큰은 URL 조각에 있어 서버로 오지 않는다. 링크 미리보기가 토큰을 소비하지 않도록
+    # 화면의 스크립트가 사용자가 새 비밀번호를 보낼 때만 토큰을 쓴다
+    return _render(request, "reset_password.html", title="새 비밀번호 설정", page="reset-password")
 
 
 @router.get("/signup")

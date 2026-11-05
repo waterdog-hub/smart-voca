@@ -228,3 +228,10 @@ th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
   .word-table tbody td[data-label="단어"] { font-weight: 700; }
   .word-table tbody td[data-label="등록일"] { color: var(--muted); font-size: 0.875rem; }
 }
+
+/* 내 계정 (A-01) */
+.account-section { max-width: 480px; margin: 0 0 32px; padding-top: 16px; border-top: 1px solid var(--line); }
+.account-section:first-of-type { border-top: 0; padding-top: 0; }
+.account-section h2 { margin: 0 0 12px; font-size: 1.125rem; }
+button.danger { color: var(--accent-text); background: var(--error); border-color: var(--error); }
+.danger-zone h2 { color: var(--error); }
