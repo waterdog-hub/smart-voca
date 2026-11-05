@@ -209,6 +209,8 @@ class Session:
         )
         browser.submit("signup-form")
         browser.wait("location.pathname==='/signup/sent'")
+        # 주소만 바뀐 상태에서 곧바로 화면을 검사하면 다음 화면이 아직 없을 수 있어 로딩이 끝나길 기다린다
+        browser.ready()
 
     def log_in(self, email: str) -> bool:
         browser = self.browser

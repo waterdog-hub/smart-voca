@@ -87,7 +87,8 @@ class PlanPagesTest(PlansTestCase):
         html = self.client.get("/plans?day=1").text
         self.assertIn("&lt;b&gt;a1&lt;/b&gt;", html)
         self.assertNotIn("<b>a1</b>", html)
-        self.assertIn("<td>신규</td><td>외움</td>", html)
+        # 휴대폰에서 표를 카드로 바꾸려고 칸마다 이름표(data-label)가 붙는다 (이슈 #21)
+        self.assertIn('<td data-label="구분">신규</td><td data-label="외움">외움</td>', html)
         self.assertIn('<option value="1" selected>1일차 (1/1)</option>', html)
         self.assertIn('<a href="/memorize" aria-current="page">', html)
         self.assertNotIn("<script>", html)

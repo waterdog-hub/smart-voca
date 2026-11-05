@@ -24,7 +24,7 @@
     <thead><tr><th scope="col">단어</th><th scope="col">뜻</th><th scope="col">구분</th><th scope="col">외움</th></tr></thead>
     <tbody>
       {% for row in rows %}
-      <tr><td>{{ row.word }}</td><td>{{ row.meaning }}</td><td>{{ row.type_label }}</td><td>{{ '외움' if row.done else '아직' }}</td></tr>
+      <tr><td data-label="단어">{{ row.word }}</td><td data-label="뜻">{{ row.meaning }}</td><td data-label="구분">{{ row.type_label }}</td><td data-label="외움">{{ '외움' if row.done else '아직' }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

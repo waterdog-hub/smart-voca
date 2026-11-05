@@ -99,7 +99,11 @@ class TestPagesTest(TestsTestCase):
         self.submit(attempt["id"], self.right_answers(attempt))
         html = self.client.get("/tests/history").text
         self.assertIn("시험 1회, 전체 정답률 100%", html)
-        self.assertIn("<td>객관식</td><td>한→영</td><td>2/2</td><td>100%</td>", html)
+        self.assertIn(
+            '<td data-label="형식">객관식</td><td data-label="방향">한→영</td>'
+            '<td data-label="점수">2/2</td><td data-label="정답률">100%</td>',
+            html,
+        )
         self.assertIn('<a href="/tests/history" aria-current="page">', html)
         self.assertNotIn("<script>", html)
 
@@ -108,10 +112,10 @@ class TestPagesTest(TestsTestCase):
         for _ in range(21):
             self.submit(self.start_ok(count=1)["id"], [])
         first = self.client.get("/tests/history").text
-        self.assertEqual(first.count("<tr><td>"), 20)
+        self.assertEqual(first.count('<tr><td data-label="날짜">'), 20)
         self.assertIn('href="/tests/history?page=2"', first)
         second = self.client.get("/tests/history?page=2").text
-        self.assertEqual(second.count("<tr><td>"), 1)
+        self.assertEqual(second.count('<tr><td data-label="날짜">'), 1)
         self.assertIn('href="/tests/history?page=1"', second)
         for bad_page in ("abc", "0", "-1", "9" * 40):
             with self.subTest(bad_page=bad_page):

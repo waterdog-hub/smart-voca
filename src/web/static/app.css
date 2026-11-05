@@ -599,6 +599,14 @@ th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
   .panel { padding: 26px 20px; }
   .card-word { font-size: 2.25rem; }
 
+  /* 일차 보기·시험 기록·시험 결과의 표는 칸 이름표가 붙은 카드로 바꾼다. 머리글 줄은 화면 낭독기용으로만 남긴다 */
+  .plan-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .plan-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; padding: 14px; border-bottom: 2px dotted var(--accent-softer); }
+  .plan-table tbody tr:last-child { border-bottom: 0; }
+  .plan-table td { display: block; padding: 0; border: 0; white-space: normal !important; }
+  .plan-table td:first-child { grid-column: 1 / -1; font-family: var(--font-display); font-size: 1.125rem; }
+  .plan-table td::before { content: attr(data-label); display: block; color: var(--muted); font-size: 0.8125rem; }
+  .plan-table td:first-child::before { display: inline; margin-right: 8px; }
   .word-table thead tr { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 2px dotted var(--accent-softer); }
   .word-table thead th { padding: 0; border: 0; background: none; }
   .word-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 12px 14px; border-bottom: 2px dotted var(--accent-softer); }

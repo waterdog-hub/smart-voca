@@ -13,7 +13,7 @@
     <thead><tr><th scope="col">날짜</th><th scope="col">형식</th><th scope="col">방향</th><th scope="col">점수</th><th scope="col">정답률</th></tr></thead>
     <tbody>
       {% for row in rows %}
-      <tr><td>{{ row.taken_at }}</td><td>{{ row.format_label }}</td><td>{{ row.direction_label }}</td><td>{{ row.score }}/{{ row.total }}</td><td>{{ row.percent }}%</td></tr>
+      <tr><td data-label="날짜">{{ row.taken_at }}</td><td data-label="형식">{{ row.format_label }}</td><td data-label="방향">{{ row.direction_label }}</td><td data-label="점수">{{ row.score }}/{{ row.total }}</td><td data-label="정답률">{{ row.percent }}%</td></tr>
       {% endfor %}
     </tbody>
   </table>

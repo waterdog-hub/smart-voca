@@ -141,15 +141,17 @@ function renderResultRows(wrongOnly) {
   for (const entry of testState.results) {
     if (wrongOnly && entry.correct) continue;
     const row = document.createElement("tr");
-    for (const text of [
-      entry.position,
-      entry.question,
-      entry.your_answer ?? "(답 없음)",
-      entry.correct_answer,
+    const columns = [
+      ["번호", entry.position],
+      ["문제", entry.question],
+      ["내 답", entry.your_answer ?? "(답 없음)"],
+      ["정답", entry.correct_answer],
       // 색만으로 구분하지 않도록 글자로 적는다 (화면 설계 §7)
-      entry.correct ? "정답" : "오답",
-    ]) {
+      ["결과", entry.correct ? "정답" : "오답"],
+    ];
+    for (const [label, text] of columns) {
       const cell = document.createElement("td");
+      cell.dataset.label = label;
       cell.textContent = text;
       row.append(cell);
     }
