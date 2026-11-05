@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - 단어장과 화면 공통 점검 (테스트 정의서 §4)
+# 2026-11-05 - smart-voca - 단어장 고르기와 내 단어 화면 점검 (테스트 정의서 §4, 결정 D-WB08)
 # 파일 위치: ai-agent/scripts/browser_checks_words.py
+#
+# 점검용 단어장(작은 것 4개)은 browser_check.py가 임시 DB에 넣는다. 실제 표본 단어장은
+# data/wordbooks.json 그대로 쓴다. 다른 점검 파일은 add_wordbook으로 단어를 준비한다.
 
 import csv
 import io
@@ -9,10 +12,72 @@ import json
 import time
 from pathlib import Path
 
-from browser_check_lib import Browser, DESKTOP_WIDTH, PHONE_WIDTH, Session
+from browser_check_lib import DESKTOP_WIDTH, PHONE_WIDTH, Browser, Session
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SAMPLE_WORDS = PROJECT_ROOT / "data" / "words.csv"
+SAMPLE_MANIFEST = PROJECT_ROOT / "data" / "wordbooks.json"
+SAMPLE_BOOK_TITLE = "기본 영단어 1"
+SAMPLE_BOOK_ROWS = 500
+
+GREEK_TITLE = "점검용 그리스 문자"
+GREEK_MORE_TITLE = "점검용 그리스 문자 추가"
+OVERLAP_TITLE = "점검용 겹침"
+HTML_TITLE = "점검용 HTML"
+HTML_WORD = "<img src=x onerror=window.__xss=1>"
+# (slug, 제목, 단어와 뜻). 다른 점검 파일이 단어 값을 그대로 기대하므로 함부로 바꾸지 않는다
+CHECK_WORDBOOKS = (
+    ("check-greek", GREEK_TITLE, (("alpha", "첫째"), ("bravo", "둘째"), ("charlie", "셋째"))),
+    ("check-greek-more", GREEK_MORE_TITLE, (("delta", "넷째"), ("<b>echo</b>", "<i>다섯째"))),
+    # the는 표본 단어장 1에도 있어 겹치는 단어 처리를 확인한다
+    ("check-overlap", OVERLAP_TITLE, (("the", "정관사"), ("zebra", "얼룩말"))),
+    ("check-html", HTML_TITLE, ((HTML_WORD, HTML_WORD),)),
+)
+
+
+def write_check_wordbooks(directory: Path) -> Path:
+    """점검용 단어장 CSV와 목록 파일을 만들고 목록 파일 경로를 돌려준다."""
+    directory.mkdir(parents=True, exist_ok=True)
+    items = []
+    for slug, title, rows in CHECK_WORDBOOKS:
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["word", "meaning"])
+        writer.writerows(rows)
+        (directory / f"{slug}.csv").write_text(buffer.getvalue(), encoding="utf-8")
+        items.append(
+            {"slug": slug, "title": title, "description": "화면 점검용 단어장", "source_note": "점검 도구", "file": f"{slug}.csv"}
+        )
+    manifest = directory / "wordbooks.json"
+    manifest.write_text(json.dumps({"wordbooks": items}, ensure_ascii=False), encoding="utf-8")
+    return manifest
+
+
+def _card_by_title(title: str) -> str:
+    # h2의 첫 글자 노드가 제목이다. 담은 단어장에는 뒤에 배지가 붙는다
+    return (
+        "[...document.querySelectorAll('.wordbook-card')]"
+        f".find(card=>card.querySelector('h2').firstChild.textContent.trim()==={json.dumps(title)})"
+    )
+
+
+def _cards_ready(browser: Browser) -> bool:
+    return browser.wait(
+        "document.getElementById('wordbook-list').getAttribute('aria-busy')==='false'"
+        " && document.querySelectorAll('.wordbook-card').length>0"
+    )
+
+
+def _click_card_button(browser: Browser, title: str) -> None:
+    browser.js(f"{_card_by_title(title)}.querySelector('button').click()")
+
+
+def add_wordbook(browser: Browser, base: str, title: str) -> bool:
+    """단어장 화면에서 제목이 같은 단어장을 담는다. 담았다는 안내가 나오면 True다."""
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    _click_card_button(browser, title)
+    return _message_has(browser, f"'{title}' 단어장을 담았습니다")
 
 
 def _word_rows(browser: Browser) -> int:
@@ -37,82 +102,81 @@ def _search(browser: Browser, keyword: str) -> None:
     _list_settled(browser)
 
 
-def _add_word(browser: Browser, word: str, meaning: str) -> None:
-    browser.wait("!document.querySelector('#add-form button').disabled")
-    browser.fill(add_dash_word=word, add_dash_meaning=meaning)
-    browser.submit("add-form")
+def _sample_rows() -> list[tuple[str, str]]:
+    text = SAMPLE_WORDS.read_text(encoding="utf-8-sig")
+    rows = [row for row in csv.reader(io.StringIO(text, newline=""))][1:]
+    return [(row[0].strip(), row[1].strip()) for row in rows if row][:SAMPLE_BOOK_ROWS]
 
 
-def check_words_flow(session: Session, work_dir: Path) -> None:
-    """단어장과 공통 화면 (테스트 정의서 §4.2, §4.3)."""
+def _message_has(browser: Browser, text: str) -> bool:
+    return browser.wait(f"document.getElementById('message').textContent.includes({json.dumps(text)})")
+
+
+def check_words_flow(session: Session) -> None:
+    """단어장 고르기, 내 단어, 공통 화면 (테스트 정의서 §4.2, §4.3)."""
     browser, check, base = session.browser, session.report.check, session.base
     email = "browser-words@example.com"
     browser.resize(DESKTOP_WIDTH, 900, mobile=False)
 
-    browser.go(f"{base}/words")
-    check("로그인 없이 단어장을 열면 로그인 화면으로 이동", browser.js("location.pathname") == "/login")
+    for path in ("/wordbooks", "/words"):
+        browser.go(f"{base}{path}")
+        check(f"로그인 없이 {path}를 열면 로그인 화면으로 이동", browser.js("location.pathname") == "/login")
 
     session.sign_up(email, "단어장")
     session.log_in(email)
-    browser.go(f"{base}/words")
-    _list_settled(browser)
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    book_count = len(json.loads(SAMPLE_MANIFEST.read_text("utf-8"))["wordbooks"]) + len(CHECK_WORDBOOKS)
+    check("준비된 단어장이 모두 카드로 표시", browser.js("document.querySelectorAll('.wordbook-card').length") == book_count)
+    sample_card_text = browser.js(f"{_card_by_title(SAMPLE_BOOK_TITLE)}.textContent")
+    check("카드에 단어 수와 예시 단어와 출처 표시", all(part in sample_card_text for part in ("단어 500개", "예: the", "출처:")), sample_card_text)
+    check("담은 단어장이 없다고 요약", "담은 단어장 0개" in browser.text("wordbook-summary"), browser.text("wordbook-summary"))
     check("인증 전 안내 띠 표시", browser.js("!!document.getElementById('verify-banner')"))
     check(
-        "인증 전 쓰기 버튼은 비활성으로 표시",
-        browser.js("document.getElementById('import-button').getAttribute('aria-disabled')==='true'"),
+        "인증 전 담기 버튼은 비활성으로 표시",
+        browser.js(f"{_card_by_title(SAMPLE_BOOK_TITLE)}.querySelector('button').getAttribute('aria-disabled')==='true'"),
     )
-    _add_word(browser, "blocked", "차단")
-    check("인증 전 추가는 안내만 표시", browser.wait("document.getElementById('message').textContent.includes('이메일 인증')"))
-    check("인증 전 단어가 추가되지 않음", not browser.js("document.getElementById('word-empty').hidden"))
+    _click_card_button(browser, SAMPLE_BOOK_TITLE)
+    check("인증 전 담기는 안내만 표시", _message_has(browser, "이메일 인증"))
+    browser.go(f"{base}/words")
+    _list_settled(browser)
+    check("인증 전에는 단어가 담기지 않음", not browser.js("document.getElementById('word-empty').hidden"))
 
     browser.go(session.verification_link(email))
     browser.wait("document.getElementById('verify-status').textContent.includes('완료')")
     browser.go(f"{base}/words")
     _list_settled(browser)
     check("인증 후 안내 띠 사라짐", browser.js("!document.getElementById('verify-banner')"))
-    check("빈 단어장 안내", "CSV" in browser.text("word-empty-text"))
-    check("빈 단어장에서 표 숨김", browser.js("document.getElementById('word-table-area').hidden"))
+    check("담은 단어가 없으면 단어장 고르기 안내", "단어장" in browser.text("word-empty-text"))
+    check("빈 목록에서 표 숨김", browser.js("document.getElementById('word-table-area').hidden"))
+    check("빈 목록에 단어장 이동 링크 표시", browser.js("!document.getElementById('word-empty-link').hidden"))
 
-    _add_word(browser, "apple", "사과/애플")
-    check("단어 추가", browser.wait("document.querySelectorAll('#word-rows tr').length===1"))
-    _add_word(browser, "APPLE", "x")
+    # 담기
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    _click_card_button(browser, SAMPLE_BOOK_TITLE)
     check(
-        "대소문자만 다른 중복은 칸 아래에 오류 표시",
-        browser.wait(
-            "!document.getElementById('add-word-error').hidden"
-            " && document.getElementById('add-word-error').textContent.includes('apple')"
-        ),
-    )
-    check(
-        "오류 칸에 테두리와 오류 표시 속성",
-        browser.js("document.getElementById('add-word').getAttribute('aria-invalid')==='true'"),
-    )
-    html_word = "<img src=x onerror=window.__xss=1>"
-    _add_word(browser, html_word, html_word)
-    browser.wait("document.querySelectorAll('#word-rows tr').length===2")
-    time.sleep(0.3)
-    check(
-        "단어의 HTML이 실행되지 않고 글자로 표시",
-        browser.js(
-            "!window.__xss && !document.querySelector('#word-rows img')"
-            " && document.getElementById('word-rows').textContent.includes('<img')"
-        ),
-    )
-
-    browser.upload("import-file", SAMPLE_WORDS)
-    check(
-        "표본 단어장 가져오기 결과 표시",
-        browser.wait("!document.getElementById('import-result').hidden", timeout=30),
+        "단어장 담기 결과 안내",
+        _message_has(browser, f"'{SAMPLE_BOOK_TITLE}' 단어장을 담았습니다. 새 단어 {SAMPLE_BOOK_ROWS}개"),
         browser.text("message"),
     )
-    sample_rows = list(csv.reader(io.StringIO(SAMPLE_WORDS.read_text(encoding="utf-8-sig"), newline="")))[1:]
-    sample_keys = {row[0].strip().lower() for row in sample_rows}
-    summary = browser.text("import-summary")
-    check("가져온 개수가 파일과 일치", f"추가 {len(sample_keys - {'apple'})}개" in summary, summary)
+    check(
+        "담은 카드에 배지와 제외 버튼 표시",
+        browser.wait(
+            f"(()=>{{const card={_card_by_title(SAMPLE_BOOK_TITLE)};"
+            "return !!card&&card.dataset.added==='true'&&!!card.querySelector('.wordbook-badge')"
+            "&&card.querySelector('button').textContent==='제외'})()"
+        ),
+    )
+    check("담은 단어장 수 요약 갱신", "담은 단어장 1개" in browser.text("wordbook-summary"), browser.text("wordbook-summary"))
+    browser.shot("wordbooks_1280.png")
+
+    # 내 단어: 목록, 페이지, 정렬, 검색
+    browser.go(f"{base}/words")
     _list_settled(browser)
-    expected_total = len(sample_keys | {"apple", html_word.lower()})
-    check("전체 개수 표시", browser.text("word-total") == f"총 {expected_total:,}개", browser.text("word-total"))
+    check("담은 단어 전체 개수 표시", browser.text("word-total") == f"총 {SAMPLE_BOOK_ROWS:,}개", browser.text("word-total"))
     check("한 페이지에 50행", _word_rows(browser) == 50, _word_rows(browser))
+    check("수정·삭제·가져오기 같은 쓰기 조작이 없음", browser.js("!document.querySelector('#word-rows button, #word-rows input, .edit-col, #add-form')"))
     browser.shot("words_1280.png")
 
     logout_visible = (
@@ -131,6 +195,7 @@ def check_words_flow(session: Session, work_dir: Path) -> None:
     browser.click("page-prev")
     _list_settled(browser)
 
+    sample_rows = _sample_rows()
     before_sort = _first_word(browser)
     browser.js("document.querySelector('th[data-sort=word] .sort-button').click()")
     _list_settled(browser)
@@ -141,72 +206,92 @@ def check_words_flow(session: Session, work_dir: Path) -> None:
     check("정렬 후 첫 단어가 바뀜", _first_word(browser) != before_sort)
     browser.js("document.querySelector('th[data-sort=created] .sort-button').click()")
     _list_settled(browser)
-    check("등록일 정렬은 추가한 순서", _first_word(browser) == "apple", _first_word(browser))
+    check("등록일 정렬은 담긴 순서", _first_word(browser) == sample_rows[0][0], _first_word(browser))
     browser.js("document.querySelector('th[data-sort=word] .sort-button').click()")
     _list_settled(browser)
 
-    _search(browser, "애플")
-    check("뜻으로 검색", _first_word(browser) == "apple", _first_word(browser))
+    needle = sample_rows[1][1]
+    matches = sorted(
+        (word for word, meaning in sample_rows if needle.lower() in word.lower() or needle.lower() in meaning.lower()),
+        key=str.lower,
+    )
+    _search(browser, needle)
+    check("뜻으로 검색", _first_word(browser) == matches[0], f"{_first_word(browser)} != {matches[0]}")
     _search(browser, "%%없는말%%")
     check("검색 결과 없음 안내", "검색 결과" in browser.text("word-empty-text"))
-    _search(browser, "apple")
+    check("검색 결과가 없을 때는 단어장 이동 링크를 숨김", browser.js("document.getElementById('word-empty-link').hidden"))
+    _search(browser, "")
 
-    browser.js("document.querySelector('.edit-col button').click()")
+    # 겹치는 단어와 제외
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    _click_card_button(browser, OVERLAP_TITLE)
     check(
-        "수정 패널이 열리고 첫 칸에 포커스",
-        browser.js("!document.getElementById('edit-panel').hidden && document.activeElement.id==='edit-word'"),
+        "이미 있는 단어는 건너뛴다고 안내",
+        _message_has(browser, "새 단어 1개, 이미 있던 단어 1개는 건너뜀"),
+        browser.text("message"),
     )
-    browser.shot("words_edit_1280.png")
-    browser.fill(edit_dash_word="Apple", edit_dash_meaning="사과 / 애플 / 회사")
-    browser.submit("edit-form")
+    browser.js("window.confirm=()=>false")
+    _click_card_button(browser, SAMPLE_BOOK_TITLE)
+    time.sleep(0.3)
     check(
-        "수정 저장과 뜻 정리",
-        browser.wait(
-            "document.querySelector('#word-rows td[data-label=\"뜻\"]')?.textContent==='사과/애플/회사'"
-            " && document.getElementById('edit-panel').hidden"
+        "제외 확인을 취소하면 담은 상태 유지",
+        browser.js(f"{_card_by_title(SAMPLE_BOOK_TITLE)}.dataset.added") == "true",
+    )
+    browser.js("window.confirm=()=>true")
+    _click_card_button(browser, SAMPLE_BOOK_TITLE)
+    check(
+        "제외하면 겹치는 단어는 남긴다고 안내",
+        _message_has(browser, f"학습에서 빠진 단어 {SAMPLE_BOOK_ROWS - 1}개, 다른 단어장에도 있어 남긴 단어 1개"),
+        browser.text("message"),
+    )
+    browser.go(f"{base}/words")
+    _list_settled(browser)
+    check("남은 단어는 겹친 단어와 새 단어", browser.text("word-total") == "총 2개", browser.text("word-total"))
+    check(
+        "먼저 담은 뜻이 유지됨",
+        browser.js("document.querySelector('#word-rows td[data-label=\"뜻\"]')?.textContent") == sample_rows[0][1],
+    )
+
+    # HTML이 섞인 단어
+    add_wordbook(browser, base, HTML_TITLE)
+    browser.go(f"{base}/words")
+    _list_settled(browser)
+    _search(browser, "img")
+    check("검색 결과에 HTML 단어 표시", _word_rows(browser) == 1, _word_rows(browser))
+    time.sleep(0.3)
+    check(
+        "단어의 HTML이 실행되지 않고 글자로 표시",
+        browser.js(
+            "!window.__xss && !document.querySelector('#word-rows img')"
+            " && document.getElementById('word-rows').textContent.includes('<img')"
         ),
     )
-    browser.js("document.querySelector('.edit-col button').click()")
-    browser.js("document.getElementById('edit-word').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))")
-    check(
-        "Esc로 닫으면 포커스가 돌아옴",
-        browser.js("document.getElementById('edit-panel').hidden && document.activeElement.classList.contains('needs-verified')"),
-    )
-
-    browser.js("document.querySelector('#word-rows input[type=checkbox]').click()")
-    check("선택 삭제 버튼에 개수 표시", browser.text("delete-selected") == "선택 삭제 (1)", browser.text("delete-selected"))
-    browser.js("window.confirm=()=>false; document.getElementById('delete-selected').click()")
-    time.sleep(0.3)
-    check("삭제 확인을 취소하면 단어 유지", _first_word(browser) == "Apple", _first_word(browser))
-    disabled_while_saving = browser.js(
-        "(()=>{window.confirm=()=>true;const b=document.getElementById('delete-selected');"
-        "b.click();return new Promise(r=>queueMicrotask(()=>r(b.disabled)));})()"
-    )
-    check("삭제 요청 중 버튼 비활성", disabled_while_saving is True)
-    check("삭제 확인 후 안내", browser.wait("document.getElementById('message').textContent.includes('1개를 삭제')"), browser.text("message"))
-    _list_settled(browser)
-    check("삭제 후 선택 해제", browser.js("document.getElementById('delete-selected').disabled"))
-    check("삭제한 단어가 목록에서 사라짐", _first_word(browser) != "Apple", _first_word(browser))
-
     _search(browser, "")
-    export_head = browser.js(
-        "fetch('/api/v1/words/export').then(r=>r.arrayBuffer())"
-        ".then(b=>Array.from(new Uint8Array(b).slice(0,8)).join(','))"
-    )
-    check("내보내기 파일이 BOM과 머리글로 시작", export_head == "239,187,191,119,111,114,100,44", export_head)
 
+    # 좁은 화면
     browser.resize(PHONE_WIDTH, 800, mobile=True)
     browser.go(f"{base}/words")
     _list_settled(browser)
-    check("375px 폭에서 가로 스크롤 없음", browser.js("document.documentElement.scrollWidth<=window.innerWidth"))
+    check("375px 폭 내 단어에 가로 스크롤 없음", browser.js("document.documentElement.scrollWidth<=window.innerWidth"))
     check("375px 폭에서 표가 카드로 바뀜", browser.js("getComputedStyle(document.querySelector('#word-rows tr')).display") == "grid")
     browser.shot("words_375.png")
-
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    check("375px 폭 단어장 화면에 가로 스크롤 없음", browser.js("document.documentElement.scrollWidth<=window.innerWidth"))
+    browser.shot("wordbooks_375.png")
     browser.resize(DESKTOP_WIDTH, 900, mobile=False)
+
+    # 모두 제외하면 빈 목록
+    browser.go(f"{base}/wordbooks")
+    _cards_ready(browser)
+    browser.js("window.confirm=()=>true")
+    for title in (OVERLAP_TITLE, HTML_TITLE):
+        _click_card_button(browser, title)
+        check(f"'{title}' 제외", _message_has(browser, f"'{title}' 단어장을 제외했습니다"), browser.text("message"))
+        browser.wait(f"{_card_by_title(title)}.dataset.added==='false'")
+    check("모두 제외하면 담은 단어장 0개", "담은 단어장 0개" in browser.text("wordbook-summary"), browser.text("wordbook-summary"))
     browser.go(f"{base}/words")
     _list_settled(browser)
-    bad_file = work_dir / "bad_header.csv"
-    bad_file.write_text("wrong,header\na,b\n", encoding="utf-8")
-    browser.upload("import-file", bad_file)
-    check("첫 줄이 틀린 파일은 안내", browser.wait("document.getElementById('message').textContent.includes('word,meaning')"), browser.text("message"))
+    check("모두 제외하면 단어장 고르기 안내", "담은 단어가 없습니다" in browser.text("word-empty-text"))
     check("단어장 화면에서 로그아웃", session.log_out())

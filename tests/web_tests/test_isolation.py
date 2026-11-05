@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - 회원 A가 회원 B의 단어에 접근하지 못하는지 확인한다 (D-A09)
+# 2026-11-05 - smart-voca - 회원 A가 회원 B의 단어와 담은 단어장에 접근하지 못하는지 확인한다 (D-A09)
 # 파일 위치: tests/web_tests/test_isolation.py
 
 import unittest
@@ -9,89 +9,70 @@ from web_tests.support import AuthTestCase
 
 from sqlalchemy import select
 
-from web.db.tables import Word
+from web.db.tables import UserWordbook, Word
 
 WORDS_API = "/api/v1/words"
+WORDBOOKS_API = "/api/v1/wordbooks"
 
 
 class WordIsolationTest(AuthTestCase):
     def setUp(self):
         super().setUp()
         self.owner_headers = self.verified_member("owner@example.com")
-        response = self.client.post(
-            WORDS_API, json={"word": "secret", "meaning": "비밀 뜻"}, headers=self.owner_headers
-        )
-        self.owner_word_id = response.json()["id"]
+        self.wordbook_id = self.insert_wordbook("shared", {"secret": "공용 뜻", "other": "다른 단어"})
+        added = self.client.post(f"{WORDBOOKS_API}/{self.wordbook_id}/add", headers=self.owner_headers)
+        self.assertEqual(added.json(), {"added": 2, "already_had": 0})
+        with self.db() as db:
+            self.owner_word_id = db.scalar(select(Word.id).where(Word.word_key == "secret"))
         self.other = self.make_auth_client()
         self.other_headers = self.verified_member("other@example.com", client=self.other)
 
     def assert_owner_word_unchanged(self):
         with self.db() as db:
             row = db.get(Word, self.owner_word_id)
-        self.assertEqual(row.word, "secret")
-        self.assertEqual(row.meaning, "비밀 뜻")
+        self.assertEqual((row.word, row.meaning), ("secret", "공용 뜻"))
         self.assertIsNone(row.deleted_at)
 
-    def test_list_search_and_export_show_only_own_words(self):
+    def test_list_and_search_show_only_own_words(self):
         self.assertEqual(self.other.get(WORDS_API).json(), {"items": [], "total": 0})
         self.assertEqual(self.other.get(WORDS_API, params={"q": "secret"}).json()["total"], 0)
-        self.assertNotIn("secret", self.other.get(f"{WORDS_API}/export").text)
 
-    def test_update_of_other_member_word_returns_404(self):
-        response = self.other.patch(
-            f"{WORDS_API}/{self.owner_word_id}", json={"word": "stolen"}, headers=self.other_headers
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json()["error"]["code"], "NOT_FOUND")
-        self.assert_owner_word_unchanged()
+    def test_wordbook_list_shows_only_own_added_state(self):
+        owner_view = self.client.get(WORDBOOKS_API).json()["items"][0]
+        other_view = self.other.get(WORDBOOKS_API).json()["items"][0]
+        self.assertTrue(owner_view["added"])
+        self.assertFalse(other_view["added"])
+        self.assertIsNone(other_view["added_at"])
 
-    def test_404_is_same_as_missing_word(self):
-        owned_by_other = self.other.patch(
-            f"{WORDS_API}/{self.owner_word_id}", json={"word": "x"}, headers=self.other_headers
-        )
-        missing = self.other.patch(
-            f"{WORDS_API}/999999", json={"word": "x"}, headers=self.other_headers
-        )
-        self.assertEqual(owned_by_other.json(), missing.json())
-
-    def test_delete_of_other_member_word_changes_nothing(self):
+    def test_other_member_remove_changes_nothing_of_owner(self):
         response = self.other.post(
-            f"{WORDS_API}/delete", json={"ids": [self.owner_word_id]}, headers=self.other_headers
+            f"{WORDBOOKS_API}/{self.wordbook_id}/remove", headers=self.other_headers
         )
-        self.assertEqual(response.json(), {"deleted": 0})
+        self.assertEqual(response.json(), {"removed": 0, "kept": 0})
         self.assert_owner_word_unchanged()
+        with self.db() as db:
+            self.assertEqual(len(db.scalars(select(UserWordbook)).all()), 1)
 
-    def test_same_word_is_allowed_for_different_members(self):
-        response = self.other.post(
-            WORDS_API, json={"word": "secret", "meaning": "내 뜻"}, headers=self.other_headers
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertNotEqual(response.json()["id"], self.owner_word_id)
+    def test_other_member_add_and_remove_only_touch_own_words(self):
+        added = self.other.post(f"{WORDBOOKS_API}/{self.wordbook_id}/add", headers=self.other_headers)
+        self.assertEqual(added.json(), {"added": 2, "already_had": 0})
+        with self.db() as db:
+            self.assertEqual(len(db.scalars(select(Word)).all()), 4)
+        self.other.post(f"{WORDBOOKS_API}/{self.wordbook_id}/remove", headers=self.other_headers)
         self.assert_owner_word_unchanged()
-
-    def test_import_does_not_touch_other_member_words(self):
-        content = "word,meaning\nsecret,덮어쓰기 시도\n".encode("utf-8")
-        response = self.other.post(
-            f"{WORDS_API}/import", files={"file": ("w.csv", content)}, headers=self.other_headers
-        )
-        self.assertEqual(response.json()["added"], 1)
-        self.assert_owner_word_unchanged()
+        self.assertEqual(self.client.get(WORDS_API).json()["total"], 2)
 
     def test_deleted_word_of_other_member_is_not_revived(self):
-        self.client.post(
-            f"{WORDS_API}/delete", json={"ids": [self.owner_word_id]}, headers=self.owner_headers
-        )
-        response = self.other.post(
-            WORDS_API, json={"word": "secret", "meaning": "내 뜻"}, headers=self.other_headers
-        )
-        self.assertNotEqual(response.json()["id"], self.owner_word_id)
+        self.client.post(f"{WORDBOOKS_API}/{self.wordbook_id}/remove", headers=self.owner_headers)
+        self.other.post(f"{WORDBOOKS_API}/{self.wordbook_id}/add", headers=self.other_headers)
         with self.db() as db:
-            self.assertEqual(len(db.scalars(select(Word)).all()), 2)
+            rows = db.scalars(select(Word).where(Word.word_key == "secret")).all()
+            self.assertEqual(len(rows), 2)
             self.assertIsNotNone(db.get(Word, self.owner_word_id).deleted_at)
 
     def test_csrf_token_of_other_member_is_rejected(self):
         response = self.client.post(
-            WORDS_API, json={"word": "a", "meaning": "b"}, headers=self.other_headers
+            f"{WORDBOOKS_API}/{self.wordbook_id}/add", headers=self.other_headers
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()["error"]["code"], "CSRF_INVALID")

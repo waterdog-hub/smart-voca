@@ -1,4 +1,4 @@
-{# 2026-11-04 - smart-voca - W-01 단어장, W-02 수정 패널, W-03 가져오기 결과. 파일 위치: src/web/templates/words.html #}
+{# 2026-11-05 - smart-voca - W-01 내 단어. 담은 단어장의 단어를 읽기만 한다 (결정 D-WB04). 파일 위치: src/web/templates/words.html #}
 {% extends "member_base.html" %}
 {% block scripts %}<script src="/static/words.js" defer></script>{% endblock %}
 {% block member_content %}
@@ -7,69 +7,23 @@
     <label for="word-search">검색</label>
     <input id="word-search" type="search" maxlength="100" placeholder="단어 또는 뜻" autocomplete="off">
   </div>
-  <div class="words-actions">
-    <input id="import-file" type="file" accept=".csv,text/csv" class="visually-hidden" tabindex="-1" aria-label="가져올 CSV 파일">
-    <button type="button" id="import-button" class="secondary needs-verified">가져오기</button>
-    <a class="button-link" href="/api/v1/words/export" download>내보내기</a>
-  </div>
+  <a class="button-link" href="/wordbooks">단어장 고르기</a>
 </div>
 <p class="help" id="word-total" aria-live="polite"></p>
 
-<section id="import-result" class="result-panel" aria-labelledby="import-result-title" hidden>
-  <h2 id="import-result-title">가져오기 결과</h2>
-  <p id="import-summary"></p>
-  <ul id="import-invalid-rows"></ul>
-  <button type="button" id="import-result-close" class="secondary">닫기</button>
-</section>
-
-<section id="edit-panel" class="result-panel" aria-labelledby="edit-title" hidden>
-  <h2 id="edit-title">단어 수정</h2>
-  <form id="edit-form">
-    <div class="field">
-      <label for="edit-word">단어</label>
-      <input id="edit-word" name="word" type="text" maxlength="100" required>
-      <p class="field-error" id="word-error" hidden></p>
-    </div>
-    <div class="field">
-      <label for="edit-meaning">뜻</label>
-      <input id="edit-meaning" name="meaning" type="text" maxlength="500" required>
-      <p class="field-error" id="meaning-error" hidden></p>
-    </div>
-    <div class="button-row">
-      <button type="submit">저장</button>
-      <button type="button" id="edit-cancel" class="secondary">취소</button>
-    </div>
-  </form>
-</section>
-
-<form id="add-form" class="add-form">
-  <div class="field">
-    <label for="add-word">단어</label>
-    <input id="add-word" name="word" type="text" maxlength="100" autocomplete="off" required>
-    <p class="field-error" id="add-word-error" hidden></p>
-  </div>
-  <div class="field">
-    <label for="add-meaning">뜻 (여러 개면 / 로 구분)</label>
-    <input id="add-meaning" name="meaning" type="text" maxlength="500" autocomplete="off" required>
-    <p class="field-error" id="add-meaning-error" hidden></p>
-  </div>
-  <button type="submit" class="needs-verified">추가</button>
-</form>
-
 <div id="word-empty" class="empty-state" hidden>
   <p id="word-empty-text"></p>
+  <a class="button-link" id="word-empty-link" href="/wordbooks" hidden>단어장 고르기</a>
 </div>
 
 <div id="word-table-area" aria-busy="true">
   <table class="word-table">
-    <caption class="visually-hidden">단어 목록. 열 제목의 버튼을 누르면 정렬됩니다.</caption>
+    <caption class="visually-hidden">내 단어 목록. 열 제목의 버튼을 누르면 정렬됩니다.</caption>
     <thead>
       <tr>
-        <th scope="col" class="select-col"><input id="select-all" type="checkbox" aria-label="이 페이지의 단어 모두 선택"></th>
         <th scope="col" data-sort="word"><button type="button" class="sort-button">단어</button></th>
         <th scope="col" data-sort="meaning"><button type="button" class="sort-button">뜻</button></th>
         <th scope="col" data-sort="created"><button type="button" class="sort-button">등록일</button></th>
-        <th scope="col"><span class="visually-hidden">수정</span></th>
       </tr>
     </thead>
     <tbody id="word-rows"></tbody>
@@ -77,19 +31,10 @@
 </div>
 
 <div class="words-footer">
-  <button type="button" id="delete-selected" class="secondary needs-verified" disabled>선택 삭제</button>
   <div class="pager">
     <button type="button" id="page-prev" class="secondary">이전</button>
     <span id="page-info"></span>
     <button type="button" id="page-next" class="secondary">다음</button>
   </div>
 </div>
-
-<details class="csv-help">
-  <summary>CSV 형식 보기</summary>
-  <p>첫 줄은 <code>word,meaning</code>이어야 합니다. 뜻이 여러 개면 <code>/</code>로 구분합니다. 뜻에 쉼표가 있으면 큰따옴표로 감쌉니다. 파일은 5MB, 5,000행까지 올릴 수 있으며, 이미 있는 단어는 건너뜁니다.</p>
-  <pre>word,meaning
-apple,사과
-run,달리다/운영하다</pre>
-</details>
 {% endblock %}

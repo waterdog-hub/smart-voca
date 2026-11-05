@@ -12,7 +12,16 @@ from fastapi.staticfiles import StaticFiles
 
 from web.db.base import check_database, make_engine, make_session_factory
 from web.errors import register_error_handlers
-from web.routers import auth_api, health_api, pages, plans_api, settings_api, tests_api, words_api
+from web.routers import (
+    auth_api,
+    health_api,
+    pages,
+    plans_api,
+    settings_api,
+    tests_api,
+    wordbooks_api,
+    words_api,
+)
 from web.services.mail_service import Mailer, create_mailer
 from web.settings import Settings
 
@@ -49,6 +58,7 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None) -
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(health_api.router)
     app.include_router(auth_api.router)
+    app.include_router(wordbooks_api.router)
     app.include_router(words_api.router)
     app.include_router(settings_api.router)
     app.include_router(plans_api.router)

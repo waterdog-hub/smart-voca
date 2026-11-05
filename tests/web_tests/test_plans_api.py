@@ -34,14 +34,8 @@ class PlansTestCase(AuthTestCase):
         super().setUp()
         self.headers = self.verified_member()
 
-    def add_words(self, *names, client=None, headers=None):
-        for name in names:
-            response = (client or self.client).post(
-                WORDS_API,
-                json={"word": name, "meaning": f"{name} 뜻"},
-                headers=headers or self.headers,
-            )
-            self.assertEqual(response.status_code, 201, response.text)
+    def add_words(self, *names, email="learner@example.com"):
+        self.insert_words({name: f"{name} 뜻" for name in names}, email=email)
 
     def use_small_day(self, **overrides):
         response = self.client.put(
@@ -166,7 +160,7 @@ class PlanCreationRulesTest(PlansTestCase):
     def test_deleted_word_is_not_assigned(self):
         self.add_words("a1", "a2")
         word_id = self.client.get(WORDS_API).json()["items"][0]["id"]
-        self.client.post(f"{WORDS_API}/delete", json={"ids": [word_id]}, headers=self.headers)
+        self.delete_words([word_id])
         self.assertEqual([item["word"] for item in self.create_ok()["items"]], ["a2"])
 
     def test_current_day_matches_created_days(self):
@@ -206,7 +200,7 @@ class PlanNotReadyTest(PlansTestCase):
         word_id = self.create_ok()["items"][0]
         ids = [row["id"] for row in self.client.get(WORDS_API).json()["items"]
                if row["word"] == word_id["word"]]
-        self.client.post(f"{WORDS_API}/delete", json={"ids": ids}, headers=self.headers)
+        self.delete_words(ids)
         self.assertEqual(self.create_ok()["day"], 2)
 
 
@@ -266,14 +260,6 @@ class PlanReadTest(PlansTestCase):
     def test_missing_day_returns_404(self):
         self.assertEqual(self.client.get(f"{PLANS_API}/1").status_code, 404)
         self.assertEqual(self.client.get(f"{PLANS_API}/0").status_code, 400)
-
-    def test_renamed_word_shows_new_name_in_plan(self):
-        self.add_words("apple")
-        plan = self.create_ok()
-        word_id = self.client.get(WORDS_API).json()["items"][0]["id"]
-        self.client.patch(f"{WORDS_API}/{word_id}", json={"word": "APPLE"}, headers=self.headers)
-        item = self.client.get(f"{PLANS_API}/1").json()["items"][0]
-        self.assertEqual((item["id"], item["word"]), (plan["items"][0]["id"], "APPLE"))
 
 
 class MemorizeTest(PlansTestCase):
@@ -363,7 +349,7 @@ class MemorizeTest(PlansTestCase):
         self.patch(self.first_id, done=True)
         word_id = next(row["id"] for row in self.client.get(WORDS_API).json()["items"]
                        if row["word"] == "a1")
-        self.client.post(f"{WORDS_API}/delete", json={"ids": [word_id]}, headers=self.headers)
+        self.delete_words([word_id])
         self.assertEqual(self.patch(self.first_id, done=True).status_code, 404)
         self.assertEqual(self.record_of("a1").memorized_count, 1)
 
@@ -406,7 +392,7 @@ class ProgressTest(PlansTestCase):
         self.patch(plan["items"][0]["id"], done=True)
         word_id = next(row["id"] for row in self.client.get(WORDS_API).json()["items"]
                        if row["word"] == plan["items"][0]["word"])
-        self.client.post(f"{WORDS_API}/delete", json={"ids": [word_id]}, headers=self.headers)
+        self.delete_words([word_id])
         progress = self.progress()
         self.assertEqual((progress["total_words"], progress["memorized_words"]), (1, 0))
 
@@ -453,7 +439,7 @@ class PlanPermissionTest(PlansTestCase):
         self.create_ok()
         other = self.make_auth_client(ip="other")
         other_headers = self.verified_member("other@example.com", client=other)
-        self.add_words("own", client=other, headers=other_headers)
+        self.add_words("own", email="other@example.com")
         created = self.create(client=other, headers=other_headers)
         self.assertEqual(created.status_code, 201)
         self.assertEqual(created.json()["day"], 1)

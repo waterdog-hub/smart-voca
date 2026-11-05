@@ -5,7 +5,7 @@
 #
 # 실행 (프로젝트 루트): .venv\Scripts\python ai-agent/scripts/browser_check.py
 # 자동 테스트는 자바스크립트를 실행하지 않으므로, 화면 동작은 이 도구로 마일스톤마다 확인한다.
-# 임시 폴더의 DB만 쓴다. data/words.csv는 가져오기 입력으로 읽기만 한다.
+# 임시 폴더의 DB만 쓴다. data/wordbooks.json의 표본 단어장과 점검용 작은 단어장을 임시 DB에 넣는다.
 
 import argparse
 import json
@@ -23,7 +23,7 @@ from browser_checks_auth import check_auth_flow
 from browser_checks_learning import check_home_and_memorize
 from browser_checks_settings import check_settings_flow
 from browser_checks_tests import check_tests_flow
-from browser_checks_words import check_words_flow
+from browser_checks_words import check_words_flow, write_check_wordbooks
 
 
 def run_checks(work_dir: Path, report: Report) -> None:
@@ -44,6 +44,16 @@ def run_checks(work_dir: Path, report: Report) -> None:
         check=True,
         capture_output=True,
     )
+    # 공용 단어장은 운영자 도구로만 넣을 수 있으므로 서버를 띄우기 전에 같은 도구로 넣는다 (결정 D-WB05)
+    check_manifest = write_check_wordbooks(work_dir / "check_wordbooks")
+    for manifest_args in ([], ["--manifest", str(check_manifest)]):
+        subprocess.run(
+            [sys.executable, str(PROJECT_ROOT / "ai-agent" / "scripts" / "load_wordbooks.py"), *manifest_args],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+        )
     log_path = work_dir / "server.log"
     with open(log_path, "wb") as server_log:
         server = subprocess.Popen(
@@ -73,7 +83,7 @@ def run_checks(work_dir: Path, report: Report) -> None:
             browser = Browser(debug_url, work_dir)
             session = Session(base_url, browser, report, log_path)
             check_auth_flow(session)
-            check_words_flow(session, work_dir)
+            check_words_flow(session)
             check_settings_flow(session)
             check_home_and_memorize(session)
             check_tests_flow(session)

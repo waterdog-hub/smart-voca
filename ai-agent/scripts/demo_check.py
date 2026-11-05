@@ -18,9 +18,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from browser_check_lib import PHONE_WIDTH, Browser, Report, Session, find_browser, free_port, wait_for_url  # noqa: E402
-from browser_checks_words import _add_word  # noqa: E402
+from browser_checks_words import SAMPLE_BOOK_TITLE, add_wordbook  # noqa: E402
 
-WORDS = (("alpha", "첫째"), ("bravo", "둘째"), ("charlie", "셋째"), ("delta", "넷째"))
+MAX_CARDS = 100  # 하루 새 단어 기본값(20)보다 넉넉한 안전 한도
 ARROW_UP = ("ArrowUp", "ArrowUp", 38)
 ARROW_RIGHT = ("ArrowRight", "ArrowRight", 39)
 WARNING_BUTTON = "[...document.querySelectorAll('button')].find(b=>/visit/i.test(b.textContent))"
@@ -80,18 +80,18 @@ def check_flow(session: Session, base: str) -> None:
     check("세션 쿠키가 Secure와 HttpOnly", bool(session_cookie and session_cookie["secure"] and session_cookie["httpOnly"]))
     check("인증 안내 띠 없음 (자동 인증)", browser.js("!document.getElementById('verify-banner')"))
 
+    check("단어장 담기", add_wordbook(browser, base, SAMPLE_BOOK_TITLE))
     browser.go(f"{base}/words")
     browser.wait("document.getElementById('word-table-area').getAttribute('aria-busy')==='false'")
-    for index, (word, meaning) in enumerate(WORDS):
-        _add_word(browser, word, meaning)
-        browser.wait(f"document.getElementById('word-total').textContent.includes('{index + 1}')")
-    check("단어 추가", "4" in browser.text("word-total"))
+    check("담은 단어가 내 단어에 표시", "500" in browser.text("word-total"), browser.text("word-total"))
 
     browser.go(f"{base}/")
     browser.js("document.querySelector('[data-create-plan]').click()")
     check("일차 생성 후 암기 화면", browser.wait("location.pathname==='/memorize'"))
     browser.wait("!document.getElementById('memorize-card').hidden")
-    for _ in WORDS:
+    for _ in range(MAX_CARDS):
+        if browser.js("!document.getElementById('memorize-summary').hidden"):
+            break
         current = browser.text("card-word")
         browser.press(*ARROW_UP)
         browser.press(*ARROW_RIGHT)

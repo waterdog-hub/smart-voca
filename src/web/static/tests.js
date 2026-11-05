@@ -20,9 +20,9 @@ function findCountProblem() {
 function findWordShortage() {
   const wordCount = Number(startForm.dataset.wordCount);
   const multipleMinimum = Number(startForm.dataset.multipleMinimum);
-  if (wordCount === 0) return "시험을 볼 단어가 없습니다. 먼저 단어장에 단어를 추가하세요.";
+  if (wordCount === 0) return "시험을 볼 단어가 없습니다. 먼저 단어장을 담으세요.";
   if (formatSelect.value === "multiple" && wordCount < multipleMinimum) {
-    return `객관식은 단어가 ${multipleMinimum}개 이상 필요합니다. 주관식을 고르거나 단어를 추가하세요.`;
+    return `객관식은 단어가 ${multipleMinimum}개 이상 필요합니다. 주관식을 고르거나 단어장을 더 담으세요.`;
   }
   return null;
 }

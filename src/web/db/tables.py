@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 2026-11-04 - smart-voca - 웹 서비스 테이블 12개를 정의한다 (docs/web 데이터 모델 문서 기준)
+# 2026-11-04 - smart-voca - 웹 서비스 테이블 15개를 정의한다 (docs/web 데이터 모델 문서 기준)
 # 파일 위치: src/web/db/tables.py
 
 from datetime import date, datetime
@@ -97,6 +97,48 @@ class Word(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(UtcDateTime)
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now, onupdate=utc_now)
+
+
+class Wordbook(Base):
+    """운영자가 넣는 공용 단어장. 회원은 읽기만 하고 고르기만 한다 (결정 D-WB01)."""
+
+    __tablename__ = "wordbooks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # 같은 slug로 다시 불러오면 이 행을 갱신한다 (D-WB05)
+    slug: Mapped[str] = mapped_column(String(50), unique=True)
+    title: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(Text)
+    source_note: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now, onupdate=utc_now)
+
+
+class WordbookEntry(Base):
+    __tablename__ = "wordbook_entries"
+    __table_args__ = (UniqueConstraint("wordbook_id", "word_key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    wordbook_id: Mapped[int] = mapped_column(
+        ForeignKey("wordbooks.id", ondelete="CASCADE"), index=True
+    )
+    word: Mapped[str] = mapped_column(Text)
+    # 대소문자만 다른 단어를 같은 단어로 보는 기준이다 (D-24)
+    word_key: Mapped[str] = mapped_column(Text)
+    meaning: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class UserWordbook(Base):
+    """회원이 담은 단어장. 제외하면 행을 지운다."""
+
+    __tablename__ = "user_wordbooks"
+
+    user_id: Mapped[int] = user_id_column(primary_key=True)
+    wordbook_id: Mapped[int] = mapped_column(
+        ForeignKey("wordbooks.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    added_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now)
 
 
 class PlanItem(Base):

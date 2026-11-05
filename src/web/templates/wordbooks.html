@@ -1,0 +1,15 @@
+{# 2026-11-05 - smart-voca - W-04 단어장 고르기. 카드는 자바스크립트가 그린다 (결정 D-WB08). 파일 위치: src/web/templates/wordbooks.html #}
+{% extends "member_base.html" %}
+{% block scripts %}<script src="/static/wordbooks.js" defer></script>{% endblock %}
+{% block member_content %}
+<p class="help">공부할 단어장을 담으세요. 담은 단어는 일차 진도와 시험에 쓰이고, 제외해도 학습 기록은 남습니다.</p>
+<p class="help" id="wordbook-summary" aria-live="polite"></p>
+
+<div id="wordbook-empty" class="empty-state" hidden>
+  <p>준비된 단어장이 없습니다.</p>
+</div>
+
+<ul id="wordbook-list" class="wordbook-list" aria-busy="true"></ul>
+
+<p><a class="button-link" href="/words">내 단어 보기</a></p>
+{% endblock %}

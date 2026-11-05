@@ -102,6 +102,14 @@ def start() -> int:
                 check=True,
                 capture_output=True,
             )
+            # 회원이 고를 공용 단어장을 넣는다. 다시 실행해도 같은 단어장이 갱신될 뿐이다 (D-WB05)
+            subprocess.run(
+                [sys.executable, str(PROJECT_ROOT / "ai-agent" / "scripts" / "load_wordbooks.py")],
+                cwd=PROJECT_ROOT,
+                env=environment,
+                check=True,
+                capture_output=True,
+            )
             server = subprocess.Popen(
                 [
                     sys.executable, "-m", "uvicorn", "--factory", "web.app:create_app",
@@ -122,7 +130,7 @@ def start() -> int:
             print("\n시연을 끝냅니다. 시연 DB를 지우려면 reset을 실행하세요.")
             return 0
         except subprocess.CalledProcessError as error:
-            print(f"DB를 준비하지 못했습니다: {error.stderr.decode('utf-8', 'replace')[-500:]}")
+            print(f"DB나 단어장을 준비하지 못했습니다: {(error.stdout + error.stderr).decode('utf-8', 'replace')[-500:]}")
             return 1
         finally:
             stop(server)

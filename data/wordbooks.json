@@ -1,0 +1,36 @@
+{
+  "wordbooks": [
+    {
+      "slug": "basic-1",
+      "title": "기본 영단어 1",
+      "description": "표본 단어 목록의 1~500번째 단어입니다. 처음 시작하는 분께 맞습니다.",
+      "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1~500번째",
+      "file": "words.csv",
+      "rows": [1, 500]
+    },
+    {
+      "slug": "basic-2",
+      "title": "기본 영단어 2",
+      "description": "표본 단어 목록의 501~1000번째 단어입니다.",
+      "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 501~1000번째",
+      "file": "words.csv",
+      "rows": [501, 1000]
+    },
+    {
+      "slug": "basic-3",
+      "title": "기본 영단어 3",
+      "description": "표본 단어 목록의 1001~1500번째 단어입니다.",
+      "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1001~1500번째",
+      "file": "words.csv",
+      "rows": [1001, 1500]
+    },
+    {
+      "slug": "basic-4",
+      "title": "기본 영단어 4",
+      "description": "표본 단어 목록의 1501번째부터 끝까지의 단어입니다.",
+      "source_note": "프로젝트 표본 단어 목록 (data/words.csv) 1501번째부터 끝까지",
+      "file": "words.csv",
+      "rows": [1501, 1988]
+    }
+  ]
+}

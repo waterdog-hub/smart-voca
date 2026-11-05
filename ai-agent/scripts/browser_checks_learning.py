@@ -4,7 +4,7 @@
 # 파일 위치: ai-agent/scripts/browser_checks_learning.py
 
 from browser_check_lib import DESKTOP_WIDTH, PHONE_WIDTH, Browser, Session
-from browser_checks_words import _add_word
+from browser_checks_words import GREEK_TITLE, add_wordbook
 
 SPACE = (" ", "Space", 32, " ")
 ARROW_UP = ("ArrowUp", "ArrowUp", 38)
@@ -57,15 +57,11 @@ def check_home_and_memorize(session: Session) -> None:
     browser.wait("document.getElementById('verify-status').textContent.includes('완료')")
 
     browser.go(f"{base}/")
-    check("빈 단어장이면 홈이 단어장으로 안내", browser.js("document.getElementById('home-state').dataset.state") == "no-words")
+    check("담은 단어장이 없으면 홈이 단어장 고르기로 안내", browser.js("document.getElementById('home-state').dataset.state") == "no-words")
     browser.go(f"{base}/memorize")
     check("진도가 없으면 암기 화면이 홈으로 안내", not _hidden(browser, "memorize-empty"))
 
-    browser.go(f"{base}/words")
-    browser.wait("document.getElementById('word-table-area').getAttribute('aria-busy')==='false'")
-    for word, meaning in (("alpha", "첫째"), ("bravo", "둘째"), ("charlie", "셋째")):
-        _add_word(browser, word, meaning)
-        browser.wait(f"document.getElementById('message').textContent.includes('{word}')")
+    check("점검용 단어장 담기", add_wordbook(browser, base, GREEK_TITLE))
     _set_day_size(browser, base, 2)
 
     browser.go(f"{base}/")

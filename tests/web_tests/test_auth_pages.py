@@ -79,15 +79,43 @@ class AuthPagesTest(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["cache-control"], "no-store")
         html = response.text
-        for element in ('id="word-search"', 'id="add-form"', 'id="import-file"', 'id="edit-panel"',
-                        'id="delete-selected"', 'href="/api/v1/words/export"', 'aria-current="page"'):
+        for element in ('id="word-search"', 'id="word-rows"', 'id="word-empty-link"',
+                        'href="/wordbooks"', 'aria-current="page"'):
             self.assertIn(element, html)
+        # 직접 추가·수정·삭제·가져오기·내보내기 화면은 없다 (D-WB04)
+        for removed in ('id="add-form"', 'id="import-file"', 'id="edit-panel"', 'id="delete-selected"',
+                        "/api/v1/words/export"):
+            self.assertNotIn(removed, html)
         self.assertIn('src="/static/words.js"', html)
         self.assertIn('data-email-verified="true"', html)
         self.assertNotIn('id="verify-banner"', html)
         self.assertNotIn("<script>", html)
         self.assertNotIn("onclick=", html)
         self.assertEqual(self.client.get("/static/words.js").status_code, 200)
+
+    def test_wordbooks_page_requires_login(self):
+        response = self.client.get("/wordbooks", follow_redirects=False)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["location"], "/login?next=%2Fwordbooks")
+
+    def test_wordbooks_page_has_core_elements_without_inline_code(self):
+        self.verified_member()
+        response = self.client.get("/wordbooks")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        html = response.text
+        for element in ('id="wordbook-list"', 'id="wordbook-empty"', 'id="wordbook-summary"',
+                        'href="/words"', 'aria-current="page"'):
+            self.assertIn(element, html)
+        self.assertIn('src="/static/wordbooks.js"', html)
+        self.assertNotIn("<script>", html)
+        self.assertNotIn("onclick=", html)
+        self.assertEqual(self.client.get("/static/wordbooks.js").status_code, 200)
+
+    def test_menu_has_wordbooks_and_my_words_in_order(self):
+        self.verified_member()
+        html = self.client.get("/").text
+        self.assertLess(html.index('href="/wordbooks"'), html.index('href="/words"'))
 
     def test_words_page_shows_banner_when_unverified(self):
         self.signup_and_login()
@@ -97,7 +125,7 @@ class AuthPagesTest(AuthTestCase):
 
     def test_member_pages_share_navigation_and_logout(self):
         self.signup_and_login()
-        for path in ("/", "/words"):
+        for path in ("/", "/words", "/wordbooks"):
             html = self.client.get(path).text
             self.assertIn('id="logout-button"', html, path)
             self.assertIn('href="/words"', html, path)

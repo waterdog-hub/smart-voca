@@ -99,7 +99,7 @@ smart-voca/
 - 처음 준비 (프로젝트 루트에서): `py -3 -m venv .venv` 후 `.venv\Scripts\python -m pip install -r requirements-dev.txt`
 - 테스트 실행 (프로젝트 루트에서): `.venv\Scripts\python -m unittest discover -s tests`
   - 시스템 Python(`py -3`)에는 웹 패키지가 없어 웹 테스트가 실패한다.
-- 웹 준비: `.env.example`을 `.env`로 복사한 뒤 `.venv\Scripts\python -m alembic upgrade head`로 DB를 만든다. `DATABASE_URL`이 없으면 앱이 시작되지 않는다.
+- 웹 준비: `.env.example`을 `.env`로 복사한 뒤 `.venv\Scripts\python -m alembic upgrade head`로 DB를 만들고 `.venv\Scripts\python ai-agent/scripts/load_wordbooks.py`로 공용 단어장을 넣는다. `DATABASE_URL`이 없으면 앱이 시작되지 않는다.
 - 웹 실행: `.venv\Scripts\python -m uvicorn --factory web.app:create_app --app-dir src --reload`
 - 테이블 변경: `src/web/db/tables.py`를 고치고 `.venv\Scripts\python -m alembic revision --autogenerate -m "영문 설명"`으로 마이그레이션을 만든다. 운영 DB를 손으로 고치지 않는다.
 - 브라우저 점검 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/browser_check.py`. 임시 DB를 쓰며, 화면을 바꾼 마일스톤마다 실행한다. `--keep`을 붙이면 스크린샷이 남는다.
@@ -298,4 +298,5 @@ smart-voca/
 - **단어 중복 기준**: 대소문자만 다른 단어(`Apple`과 `apple`)는 같은 단어로 본다 (설계서 D-24).
 - **Git 작성자 설정**: 전역 설정이 없어 저장소를 복제한 PC마다 `user.name`과 `user.email`을 저장소 설정으로 넣는다. 이메일은 개인 주소가 공개되지 않도록 GitHub noreply 주소를 쓴다 (인수인계 문서 §5).
 - **개발용 메일**: 개발 환경은 메일을 보내지 않고 서버 콘솔에 인증 링크를 출력한다. 운영은 발송 업체를 정해 구현할 때까지(M10) 발송이 실패 처리된다.
+- **공용 단어장**: 회원은 단어를 직접 추가·수정·삭제하지 않고 운영자가 넣은 단어장을 담고 제외한다 (이슈 #17, 검토 문서 `검토_261105_MW 공용 단어장 결정.md`). 단어장은 `data/wordbooks.json`에 적고 `load_wordbooks.py`로 DB에 넣는다. 담기는 회원의 `words`로 복사하므로 단어장을 고쳐도 이미 담은 단어는 바뀌지 않는다. 웹 테스트에서 단어가 필요하면 `AuthTestCase.insert_words`와 `insert_wordbook`을 쓴다.
 - **새 쓰기 API**: 회원 데이터를 바꾸는 API에는 `web.dependencies.VerifiedWrite`를 붙인다. 로그인, CSRF, 이메일 인증을 함께 검사한다.

@@ -15,7 +15,6 @@ from web.repositories import auth_repository
 ACTION_LOGIN = "login"
 ACTION_SIGNUP = "signup"
 ACTION_RESEND_VERIFICATION = "resend_verification"
-ACTION_IMPORT = "import"
 
 
 @dataclass(frozen=True)
@@ -31,8 +30,6 @@ LOGIN_PER_IP = Limit(50, timedelta(minutes=15))
 VERIFICATION_MAIL_PER_ACCOUNT = Limit(1, timedelta(minutes=1))
 # 학교처럼 IP를 공유하는 곳을 고려해 IP 기준은 넉넉하게 둔다 (이슈 #9)
 SIGNUP_PER_IP = Limit(20, timedelta(hours=1))
-# 파일을 고쳐 다시 올리는 경우를 감안한 값이다 (이슈 #10)
-IMPORT_PER_ACCOUNT = Limit(20, timedelta(hours=1))
 
 
 def enforce_limit(

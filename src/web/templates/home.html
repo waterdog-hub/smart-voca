@@ -5,8 +5,8 @@
 <section class="result-panel" aria-labelledby="today-title">
   <h2 id="today-title">오늘 할 일</h2>
   {% if progress.total_words == 0 %}
-  <p id="home-state" data-state="no-words">단어장부터 만드세요. 단어를 추가하거나 CSV 파일을 가져올 수 있습니다.</p>
-  <a class="button-link" href="/words">단어장으로 가기</a>
+  <p id="home-state" data-state="no-words">공부할 단어장을 먼저 담으세요.</p>
+  <a class="button-link" href="/wordbooks">단어장 고르기</a>
   {% elif not progress.day_complete %}
   <p id="home-state" data-state="in-progress">{{ progress.current_day }}일차를 외우는 중입니다. {{ progress.day_total }}개 중 {{ progress.day_done }}개를 외웠습니다.</p>
   <progress max="{{ progress.day_total }}" value="{{ progress.day_done }}" aria-label="현재 일차 진행률"></progress>

@@ -156,9 +156,14 @@ def plans_page(request: Request, current: OptionalSession, db: DbSession) -> Res
     )
 
 
+@router.get("/wordbooks")
+def wordbooks_page(request: Request, current: OptionalSession) -> Response:
+    return _render_member_page(request, current, "wordbooks.html", "단어장", "wordbooks")
+
+
 @router.get("/words")
 def words_page(request: Request, current: OptionalSession) -> Response:
-    return _render_member_page(request, current, "words.html", "단어장", "words")
+    return _render_member_page(request, current, "words.html", "내 단어", "words")
 
 
 @router.get("/tests")

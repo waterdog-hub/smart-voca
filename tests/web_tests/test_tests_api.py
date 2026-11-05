@@ -27,14 +27,8 @@ class TestsTestCase(AuthTestCase):
         super().setUp()
         self.headers = self.verified_member()
 
-    def add_words(self, words=None, client=None, headers=None):
-        for word, meaning in (words or SAMPLE_WORDS).items():
-            response = (client or self.client).post(
-                WORDS_API,
-                json={"word": word, "meaning": meaning},
-                headers=headers or self.headers,
-            )
-            self.assertEqual(response.status_code, 201, response.text)
+    def add_words(self, words=None, email="learner@example.com"):
+        self.insert_words(words or SAMPLE_WORDS, email=email)
 
     def start(self, test_format="multiple", test_direction="en_ko", count=5, **extra):
         return self.client.post(
@@ -174,7 +168,7 @@ class TestStartTest(TestsTestCase):
         self.add_words()
         word_id = next(row["id"] for row in self.client.get(WORDS_API).json()["items"]
                        if row["word"] == "apple")
-        self.client.post(f"{WORDS_API}/delete", json={"ids": [word_id]}, headers=self.headers)
+        self.delete_words([word_id])
         questions = {item["question"] for item in self.start_ok("subjective")["items"]}
         self.assertNotIn("apple", questions)
 
@@ -321,7 +315,7 @@ class SubmitTest(TestsTestCase):
         self.add_words()
         attempt = self.start_ok(count=5)
         word_ids = [row["id"] for row in self.client.get(WORDS_API).json()["items"]]
-        self.client.post(f"{WORDS_API}/delete", json={"ids": word_ids}, headers=self.headers)
+        self.delete_words(word_ids)
         response = self.submit(attempt["id"], self.right_answers(attempt))
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()["score"], 5)

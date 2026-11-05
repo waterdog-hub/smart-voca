@@ -25,7 +25,7 @@ from web.services.mail_service import (
 )
 from web.settings import Settings
 
-WORDS_API = "/api/v1/words"
+WORDBOOKS_API = "/api/v1/wordbooks"
 
 
 class DemoTestCase(AuthTestCase):
@@ -55,10 +55,12 @@ class AutoVerifyTest(DemoTestCase):
     def test_member_can_write_after_login(self):
         self.signup_demo()
         token = self.login_demo().json()["csrf_token"]
+        wordbook_id = self.insert_wordbook("demo-book", {"apple": "사과"})
         response = self.demo.post(
-            WORDS_API, json={"word": "apple", "meaning": "사과"}, headers={"X-CSRF-Token": token}
+            f"{WORDBOOKS_API}/{wordbook_id}/add", headers={"X-CSRF-Token": token}
         )
-        self.assertEqual(response.status_code, 201, response.text)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {"added": 1, "already_had": 0})
 
     def test_signup_does_not_log_in(self):
         # 자동 인증이어도 자동 로그인은 하지 않는다 (D-A04)

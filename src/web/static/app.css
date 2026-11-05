@@ -172,7 +172,6 @@ progress { display: block; width: 100%; height: 10px; margin: 8px 0 16px; }
 .words-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .words-search { flex: 1 1 240px; max-width: 420px; margin-bottom: 0; }
 .field input[type="search"] { width: 100%; padding: 10px; font: inherit; border: 1px solid var(--line); border-radius: 6px; }
-.words-actions { display: flex; gap: 8px; }
 .button-link {
   display: inline-flex;
   align-items: center;
@@ -187,19 +186,14 @@ progress { display: block; width: 100%; height: 10px; margin: 8px 0 16px; }
 }
 #word-total { margin: 8px 0 16px; }
 
-.add-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
-  gap: 12px;
-  align-items: start;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-.add-form .field { margin-bottom: 0; }
-.add-form button { width: auto; margin-top: 28px; }
+/* 단어장 고르기 (결정 D-WB08) */
+.wordbook-list { display: grid; gap: 12px; margin: 16px 0; padding: 0; list-style: none; }
+.wordbook-card { padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.wordbook-card h2 { margin: 0 0 8px; font-size: 1.125rem; }
+.wordbook-card p { margin: 0 0 8px; }
+.wordbook-card button { width: auto; margin-top: 8px; }
+.wordbook-badge { padding: 2px 8px; font-size: 0.8125rem; font-weight: 600; color: var(--ok); background: var(--ok-bg); border-radius: 999px; }
+#wordbook-list[aria-busy="true"] { opacity: 0.5; }
 
 .result-panel { margin-bottom: 16px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 .result-panel h2 { margin: 0 0 12px; font-size: 1.125rem; }
@@ -210,9 +204,6 @@ progress { display: block; width: 100%; height: 10px; margin: 8px 0 16px; }
 .empty-state { padding: 32px 16px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 8px; }
 .word-table { width: 100%; border-collapse: collapse; background: var(--surface); }
 .word-table th, .word-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
-.word-table .select-col { width: 40px; }
-.word-table .edit-col { width: 88px; text-align: right; }
-.word-table .edit-col button { min-height: 36px; padding: 4px 12px; }
 .sort-button { min-height: 32px; padding: 0; color: var(--text); background: none; border: 0; font-weight: 700; }
 th[aria-sort="ascending"] .sort-button::after { content: " \25B2"; }
 th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
@@ -220,8 +211,6 @@ th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
 
 .words-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0; }
 .pager { display: flex; align-items: center; gap: 8px; }
-.csv-help { color: var(--muted); }
-.csv-help pre { padding: 12px; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 
 /* 좁은 화면: 메뉴는 위로, 표는 카드로 바꾼다 (D-UI06) */
 @media (max-width: 720px) {
@@ -232,16 +221,10 @@ th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
   .member-nav-user span { margin: 0; }
   .member-nav-user button { min-height: 36px; padding: 4px 10px; }
   .member-main { padding: 16px; }
-  .add-form { grid-template-columns: minmax(0, 1fr); }
-  .add-form button { width: 100%; margin-top: 0; }
   .word-table thead tr { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
   .word-table thead th { padding: 0; border: 0; }
-  .word-table thead th:last-child { display: none; }
-  .word-table tbody tr { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 2px 8px; padding: 12px; border-bottom: 1px solid var(--line); }
+  .word-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 12px; border-bottom: 1px solid var(--line); }
   .word-table tbody td { display: block; padding: 0; border: 0; }
-  .word-table tbody .select-col { grid-row: 1 / span 3; }
-  .word-table tbody td[data-label="단어"] { grid-column: 2; font-weight: 700; }
-  .word-table tbody td[data-label="뜻"] { grid-column: 2; }
-  .word-table tbody td[data-label="등록일"] { grid-column: 2; color: var(--muted); font-size: 0.875rem; }
-  .word-table tbody .edit-col { grid-column: 3; grid-row: 1 / span 3; width: auto; }
+  .word-table tbody td[data-label="단어"] { font-weight: 700; }
+  .word-table tbody td[data-label="등록일"] { color: var(--muted); font-size: 0.875rem; }
 }

@@ -6,12 +6,11 @@
 import json
 
 from browser_check_lib import DESKTOP_WIDTH, PHONE_WIDTH, Browser, Session
-from browser_checks_words import _add_word
+from browser_checks_words import GREEK_MORE_TITLE, GREEK_TITLE, add_wordbook
 
 KEY_2 = ("2", "Digit2", 50, "2")
 KEY_3 = ("3", "Digit3", 51, "3")
 ENTER = ("Enter", "Enter", 13, "\r")
-WORDS = (("alpha", "첫째"), ("bravo", "둘째"), ("charlie", "셋째"), ("delta", "넷째"), ("<b>echo</b>", "<i>다섯째"))
 
 
 def _shown(browser: Browser, element_id: str) -> bool:
@@ -54,11 +53,7 @@ def check_tests_flow(session: Session) -> None:
     browser.go(f"{base}/tests/history")
     check("기록이 없으면 빈 상태 안내", _shown(browser, "history-empty"))
 
-    browser.go(f"{base}/words")
-    browser.wait("document.getElementById('word-table-area').getAttribute('aria-busy')==='false'")
-    for index, (word, meaning) in enumerate(WORDS[:3]):
-        _add_word(browser, word, meaning)
-        browser.wait(f"document.getElementById('word-total').textContent.includes('{index + 1}')")
+    check("점검용 단어장 담기 (단어 3개)", add_wordbook(browser, base, GREEK_TITLE))
 
     browser.go(f"{base}/tests")
     browser.wait("!!document.getElementById('test-start')")
@@ -70,11 +65,7 @@ def check_tests_flow(session: Session) -> None:
     )
     check("주관식을 고르면 시작 가능", not browser.js("document.getElementById('test-start').disabled"))
 
-    browser.go(f"{base}/words")
-    browser.wait("document.getElementById('word-table-area').getAttribute('aria-busy')==='false'")
-    for index, (word, meaning) in enumerate(WORDS[3:]):
-        _add_word(browser, word, meaning)
-        browser.wait(f"document.getElementById('word-total').textContent.includes('{index + 4}')")
+    check("점검용 단어장 추가로 담기 (단어 2개 더)", add_wordbook(browser, base, GREEK_MORE_TITLE))
 
     # 객관식과 키보드
     browser.go(f"{base}/tests")

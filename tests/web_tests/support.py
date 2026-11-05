@@ -14,10 +14,13 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 
 from web.app import create_app  # noqa: E402
 from web.db import tables  # noqa: E402,F401  (테이블을 메타데이터에 등록한다)
-from web.db.base import Base, make_engine  # noqa: E402
+from web.db.base import Base, make_engine, utc_now  # noqa: E402
+from web.db.tables import User, Wordbook, Word  # noqa: E402
+from web.repositories import word_repository, wordbook_repository  # noqa: E402
 from web.settings import Settings  # noqa: E402
 
 TEST_AUTH_HASH_KEY = "test-auth-hash-key-at-least-32-characters"
@@ -131,3 +134,33 @@ class AuthTestCase(WebTestCase):
 
     def db(self):
         return self.client.app.state.session_factory()
+
+    # 단어 추가·삭제 API는 없어졌다 (결정 D-WB04). 시험과 진도 테스트가 쓸 단어는 DB에 직접 넣는다
+    def insert_words(self, words, email="learner@example.com"):
+        with self.db() as db:
+            user = db.scalar(select(User).where(User.email == email))
+            for word, meaning in words.items():
+                word_repository.add_word(db, user.id, word, word.lower(), meaning)
+            db.commit()
+
+    def delete_words(self, word_ids):
+        """단어장 제외와 같은 소프트 삭제를 한다. 진도에서 빠지고 학습 기록은 남는다."""
+        with self.db() as db:
+            owners = set(db.scalars(select(Word.user_id).where(Word.id.in_(list(word_ids)))))
+            for user_id in owners:
+                word_repository.soft_delete_words(db, user_id, word_ids, utc_now())
+            db.commit()
+
+    def insert_wordbook(self, slug="book-a", words=None, title=None):
+        """공용 단어장을 만들고 id를 돌려준다. words는 {단어: 뜻}이며 순서가 position이 된다."""
+        with self.db() as db:
+            book = Wordbook(
+                slug=slug, title=title or f"{slug} 단어장", description=f"{slug} 설명",
+                source_note="테스트 자료",
+            )
+            db.add(book)
+            db.flush()
+            rows = [(word, word.lower(), meaning) for word, meaning in (words or {}).items()]
+            wordbook_repository.replace_entries(db, book.id, rows)
+            db.commit()
+            return book.id
