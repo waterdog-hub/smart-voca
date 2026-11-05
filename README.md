@@ -66,7 +66,7 @@ Windows에 Python 3.15가 설치되어 있어야 합니다. 명령은 모두 프
 
 ### 시연 서버
 
-개발 PC의 서버를 ngrok으로 열어 참가자가 접속합니다. ngrok 계정과 설치가 필요하고, 시연 때만 열고 바로 닫습니다. 절차와 시연 전 점검은 [시연 절차](docs/web/운영_261104_시연%20절차%20v1.3.md)에 있습니다.
+개발 PC의 서버를 ngrok으로 열어 참가자가 접속합니다. ngrok 계정과 설치가 필요하고, 시연 때만 열고 바로 닫습니다. 절차와 시연 전 점검은 [시연 절차](docs/web/운영_261104_시연%20절차%20v1.4.md)에 있습니다.
 
 ```
 .venv\Scripts\python ai-agent/scripts/demo_server.py start
