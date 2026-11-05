@@ -6,7 +6,7 @@
 - **한 줄 설명**: 영어 단어 암기와 시험을 돕는 학습 서비스 (진도 관리, 객관식·주관식 시험, 오답 복습). Windows 데스크톱 앱을 완료하고 회원제 웹 서비스로 전환 중
 - **작성자**: `260322 은형주`
 - **리포지토리**: `https://github.com/waterdog-hub/smart-voca`
-- **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M6 완료, MD 구현 완료·실제 ngrok 리허설 전, 2026-11-04). 제출은 프로그램 시연과 PPT 발표. 일정 미정
+- **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M6, MD 완료, 2026-11-05. 다음은 M7). 제출은 프로그램 시연과 PPT 발표. 일정 미정
 
 ### 기술 스택
 
@@ -103,7 +103,7 @@ smart-voca/
 - 웹 실행: `.venv\Scripts\python -m uvicorn --factory web.app:create_app --app-dir src --reload`
 - 테이블 변경: `src/web/db/tables.py`를 고치고 `.venv\Scripts\python -m alembic revision --autogenerate -m "영문 설명"`으로 마이그레이션을 만든다. 운영 DB를 손으로 고치지 않는다.
 - 브라우저 점검 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/browser_check.py`. 임시 DB를 쓰며, 화면을 바꾼 마일스톤마다 실행한다. `--keep`을 붙이면 스크린샷이 남는다.
-- 시연 서버 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/demo_server.py start`, 시연 DB 삭제는 `reset`. 개발 PC를 인터넷에 여는 일이라 사용자 승인 후 실행한다. 절차는 작업 폴더의 시연 절차 문서에 있다.
+- 시연 서버 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/demo_server.py start`, 시연 DB 삭제는 `reset`. 개발 PC를 인터넷에 여는 일이라 사용자 승인 후 실행한다. 절차는 `docs/web/`의 시연 절차 문서에 있다.
 - 데스크톱 앱 실행: `py -3 src/main.py` (별도 빌드 없음)
 - 개발은 호스트에서 직접 실행한다. 운영 배포만 컨테이너를 쓴다 (배포·운영 설계 D-OP02, M10).
 - 데이터 파일은 `data/`에 생성되며, 실행 중 학습 기록이 바뀐다. 테스트는 임시 폴더를 쓴다.
@@ -290,7 +290,7 @@ smart-voca/
 - **콘솔 한글 깨짐**: Windows 콘솔(cp949)에서 한글이 깨져 보여도 데이터 문제가 아니다. CSV 파일은 `utf-8-sig`로 저장된다.
 - **실행 중 데이터 변경**: 앱을 조작하면 `data/`의 CSV(설정, 학습 기록, 일차 진도)가 바뀐다. 테스트는 임시 폴더를 쓰므로 `data/`를 건드리지 않는다.
 - **제출 형식**: 프로그램 시연과 PPT 발표로 확정 (2026-11-04, 기획서 Q-11). **일정**: 교수님 공지 전 (기획서 Q-10).
-- **시연 방식**: 개발 PC의 서버를 ngrok으로 열어 소규모 접속 (결정 기록 D-W19). 진행 순서는 MD → M7 → M8 → M10이다.
+- **시연 방식**: 개발 PC의 서버를 ngrok으로 열어 소규모 접속 (결정 기록 D-W19). MD를 마쳤고 진행 순서는 M7 → M8 → M10이다.
 - **요구사항 추적**: 요구사항 ID는 `docs/web/`의 요구사항 명세에 있다. 결정 이슈에 관련 ID를 적고, 기능을 구현하면 명세의 상태와 추적 매트릭스를 함께 갱신한다.
 - **GitHub**: 원격 `waterdog-hub/smart-voca`, 기본 브랜치 `main`. push 권한은 `waterdog-hub` 계정에 있다 (`gh auth setup-git`으로 연결).
 - **줄바꿈 설정**: 이 저장소에만 `core.autocrlf=input`을 설정했다 (전역 설정은 `true` 그대로). 저장소 파일은 LF다. `git add`에서 CRLF 경고가 나오면 이 설정과 체크아웃 방식을 확인한다 (검토 문서 `ai-agent/claude/검토_261028_줄바꿈 정책.md`).
