@@ -18,3 +18,8 @@ data/backup/
 # 개발용 SQLite DB
 *.db
 *.sqlite3
+
+# 발표 자료의 중간 재료 (다시 만들 수 있고 용량이 큼, 최종 PPT·영상·줄인 그림만 남긴다)
+ai-agent/claude/*/발표/assets/frames/
+ai-agent/claude/*/발표/assets/frames.json
+ai-agent/claude/*/발표/assets/screens/

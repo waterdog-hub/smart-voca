@@ -3,3 +3,6 @@
 # 웹 글꼴 줄이기 (ai-agent/scripts/make_fonts.py). 서비스 실행에는 필요 없다.
 fonttools==4.68.0
 brotli==1.2.1
+# 시연 접속 주소를 QR 코드로 만들기 (ai-agent/scripts/make_qr.py). 서비스 실행에는 필요 없다.
+qrcode[pil]==8.2
+pillow==13.0.0
