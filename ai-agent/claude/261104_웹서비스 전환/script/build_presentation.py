@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # 2026-11-05 - smart-voca - 발표 PPT 초안(.pptx)을 만든다 (캡처, 시연 영상, QR 포함)
+# 2026-11-10 - 구성안 v0.2를 읽고, 5번 타임라인을 커밋 기록에 맞게 고침 (v0.2)
 # 파일 위치: ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py
 #
 # 실행 (도구용 가상환경, python-pptx와 Pillow 필요): python build_presentation.py 발표폴더
 #   발표폴더/assets/에 capture_presentation_assets.py와 make_video.py의 결과(screens/, demo.mp4, demo_poster.png)와
 #   QR 그림(qr_placeholder.png)이 있어야 한다. 대본은 발표 구성안 문서에서 읽어 슬라이드 노트에 넣는다.
-# 결과: 발표폴더/smart-voca 발표 초안 v0.1.pptx
+# 결과: 발표폴더/smart-voca 발표 초안 v0.2.pptx
 # PowerPoint가 이 PC에 없어 화면으로 직접 확인하지 못한다. 대신 글꼴 크기로 상자에 글이 들어가는지 계산해 경고한다.
 
 import re
@@ -22,7 +23,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
 WORK_DIR = Path(__file__).resolve().parent.parent
-OUTLINE = WORK_DIR / "보고서_261105_최종 발표 구성안 v0.1.md"
+OUTLINE = WORK_DIR / "보고서_261105_최종 발표 구성안 v0.2.md"
 FONT = "Malgun Gothic"
 FONT_FILES = {False: r"C:\Windows\Fonts\malgun.ttf", True: r"C:\Windows\Fonts\malgunbd.ttf"}
 
@@ -329,7 +330,7 @@ def build(folder: Path) -> Path:
     s = presentation.slides.add_slide(blank)
     set_background(s, BG)
     add_title(s, "AI와 어떻게 만들었나")
-    steps = [("10/21~28", "데스크톱 앱 완성", MINT, MINT_LINE), ("11/4", "설계 문서 12개", WARM, WARM_LINE), ("11/5", "웹 서비스 구현", ACCENT_SOFT, ACCENT_LINE)]
+    steps = [("10/21~28", "데스크톱 앱 완성", MINT, MINT_LINE), ("11/4", "설계 + 핵심 기능", WARM, WARM_LINE), ("11/5", "계정·소셜·디자인", ACCENT_SOFT, ACCENT_LINE)]
     for index, (date, text, fill, line) in enumerate(steps):
         x = MARGIN + index * 4.1
         add_box(s, x, 1.45, 3.7, 1.35, fill=fill, line=line, name=f"단계 {index + 1}")
@@ -468,7 +469,7 @@ def build(folder: Path) -> Path:
             warnings.append(f"표 칸이 높아질 수 있음: {answer[:20]}")
     add_notes(s, "전체 질문과 답은 발표 구성안 문서 §6에 있다.")
 
-    target = folder / "smart-voca 발표 초안 v0.1.pptx"
+    target = folder / "smart-voca 발표 초안 v0.2.pptx"
     presentation.save(str(target))
     return target
 
