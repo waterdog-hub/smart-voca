@@ -3,12 +3,13 @@
 # 2026-11-05 - smart-voca - 발표 PPT 초안(.pptx)을 만든다 (캡처, 시연 영상, QR 포함)
 # 2026-11-10 - 구성안 v0.2를 읽고, 5번 타임라인을 커밋 기록에 맞게 고침 (v0.2)
 # 2026-11-10 - 3번 안내에 휴대폰 데이터(LTE) 접속을 넣음 (v0.3, 청중 참여형 결정)
+# 2026-11-10 - 7번 한계와 10번 예상 질문을 동시 접속 점검 결과로 고침 (v0.4)
 # 파일 위치: ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py
 #
 # 실행 (도구용 가상환경, python-pptx와 Pillow 필요): python build_presentation.py 발표폴더
 #   발표폴더/assets/에 capture_presentation_assets.py와 make_video.py의 결과(screens/, demo.mp4, demo_poster.png)와
 #   QR 그림(qr_placeholder.png)이 있어야 한다. 대본은 발표 구성안 문서에서 읽어 슬라이드 노트에 넣는다.
-# 결과: 발표폴더/smart-voca 발표 초안 v0.3.pptx
+# 결과: 발표폴더/smart-voca 발표 초안 v0.4.pptx
 # PowerPoint가 이 PC에 없어 화면으로 직접 확인하지 못한다. 대신 글꼴 크기로 상자에 글이 들어가는지 계산해 경고한다.
 
 import re
@@ -387,7 +388,7 @@ def build(folder: Path) -> Path:
     add_text(s, MARGIN + 0.35, 1.6, 5.15, 0.5, "아직 못 한 일", size=22, bold=True, color=ACCENT_DARK, name="한계 제목")
     add_text(s, MARGIN + 0.35, 2.2, 5.15, 3.0, [
         ("구글·카카오 로그인은 구현했지만 실제 제공자로는 확인하지 못했어요", {"space_after": 10}),
-        ("많은 사람이 동시에 쓰는 부하 시험은 하지 않았어요", {"space_after": 10}),
+        ("동시 접속은 10명까지만 확인했어요", {"space_after": 10}),
         "단어 목록의 출처 확인이 남아 있어요",
     ], size=20, name="한계")
     add_box(s, 6.78, 1.45, 5.85, 3.9, fill=MINT, line=MINT_LINE, name="다음 단계 카드")
@@ -436,7 +437,7 @@ def build(folder: Path) -> Path:
         ("초급·중급·고급 기준은?", "목록 순서 기준이에요. 실제 난이도순은 아니에요"),
         ("소셜 로그인은 되나요?", "구현과 가짜 제공자 테스트까지 했고, 실제 확인은 앱 등록 뒤예요"),
         ("보안은 어떻게 했나요?", "비밀번호 해시, 회원별 데이터 격리, 정답 비공개, 탈퇴 시 즉시 삭제예요"),
-        ("몇 명까지 쓰나요?", "시연은 10명 이내예요. 부하 시험은 하지 않았어요"),
+        ("몇 명까지 쓰나요?", "동시 10명은 통과, 20명은 일부 실패했어요"),
         ("AI는 무엇을 했나요?", "방향과 화면은 제가 정하고 승인했고, AI는 구현·테스트·문서를 맡았어요"),
     ]
     table_shape = s.shapes.add_table(len(rows) + 1, 2, Inches(MARGIN), Inches(1.4), Inches(SLIDE_W - 2 * MARGIN), Inches(5.3))
@@ -470,7 +471,7 @@ def build(folder: Path) -> Path:
             warnings.append(f"표 칸이 높아질 수 있음: {answer[:20]}")
     add_notes(s, "전체 질문과 답은 발표 구성안 문서 §6에 있다.")
 
-    target = folder / "smart-voca 발표 초안 v0.3.pptx"
+    target = folder / "smart-voca 발표 초안 v0.4.pptx"
     presentation.save(str(target))
     return target
 
