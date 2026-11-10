@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 # 2026-11-05 - smart-voca - 발표 PPT 초안(.pptx)을 만든다 (캡처, 시연 영상, QR 포함)
 # 2026-11-10 - 구성안 v0.2를 읽고, 5번 타임라인을 커밋 기록에 맞게 고침 (v0.2)
+# 2026-11-10 - 3번 안내에 휴대폰 데이터(LTE) 접속을 넣음 (v0.3, 청중 참여형 결정)
 # 파일 위치: ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py
 #
 # 실행 (도구용 가상환경, python-pptx와 Pillow 필요): python build_presentation.py 발표폴더
 #   발표폴더/assets/에 capture_presentation_assets.py와 make_video.py의 결과(screens/, demo.mp4, demo_poster.png)와
 #   QR 그림(qr_placeholder.png)이 있어야 한다. 대본은 발표 구성안 문서에서 읽어 슬라이드 노트에 넣는다.
-# 결과: 발표폴더/smart-voca 발표 초안 v0.2.pptx
+# 결과: 발표폴더/smart-voca 발표 초안 v0.3.pptx
 # PowerPoint가 이 PC에 없어 화면으로 직접 확인하지 못한다. 대신 글꼴 크기로 상자에 글이 들어가는지 계산해 경고한다.
 
 import re
@@ -304,7 +305,7 @@ def build(folder: Path) -> Path:
     add_text(s, MARGIN + 0.3, 1.6, 6.6, 1.35, "https://(발표 당일 주소)", size=30, bold=True, color=ACCENT_DARK,
              anchor=MSO_ANCHOR.MIDDLE, name="접속 주소")
     add_text(s, MARGIN, 3.3, 7.2, 2.9, [
-        ("① 주소를 열고 Visit 버튼을 누르세요", {"space_after": 12}),
+        ("① 휴대폰 데이터(LTE)로 열고 Visit을 누르세요", {"space_after": 12}),
         ("② 가입은 아무 이메일 형식이면 됩니다 (예: a@b.com)", {"space_after": 12}),
         ("③ 실제 비밀번호와 개인정보는 쓰지 마세요", {"bold": True, "color": ACCENT_DARK}),
     ], size=22, name="접속 안내")
@@ -469,7 +470,7 @@ def build(folder: Path) -> Path:
             warnings.append(f"표 칸이 높아질 수 있음: {answer[:20]}")
     add_notes(s, "전체 질문과 답은 발표 구성안 문서 §6에 있다.")
 
-    target = folder / "smart-voca 발표 초안 v0.2.pptx"
+    target = folder / "smart-voca 발표 초안 v0.3.pptx"
     presentation.save(str(target))
     return target
 
