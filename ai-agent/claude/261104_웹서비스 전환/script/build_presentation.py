@@ -4,12 +4,13 @@
 # 2026-11-10 - 구성안 v0.2를 읽고, 5번 타임라인을 커밋 기록에 맞게 고침 (v0.2)
 # 2026-11-10 - 3번 안내에 휴대폰 데이터(LTE) 접속을 넣음 (v0.3, 청중 참여형 결정)
 # 2026-11-10 - 7번 한계와 10번 예상 질문을 동시 접속 점검 결과로 고침 (v0.4)
+# 2026-11-10 - 단어 목록 출처(교수님 제공)를 7번 한계와 10번 예상 질문에 반영 (v0.5)
 # 파일 위치: ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py
 #
 # 실행 (도구용 가상환경, python-pptx와 Pillow 필요): python build_presentation.py 발표폴더
 #   발표폴더/assets/에 capture_presentation_assets.py와 make_video.py의 결과(screens/, demo.mp4, demo_poster.png)와
 #   QR 그림(qr_placeholder.png)이 있어야 한다. 대본은 발표 구성안 문서에서 읽어 슬라이드 노트에 넣는다.
-# 결과: 발표폴더/smart-voca 발표 초안 v0.4.pptx
+# 결과: 발표폴더/smart-voca 발표 초안 v0.5.pptx
 # PowerPoint가 이 PC에 없어 화면으로 직접 확인하지 못한다. 대신 글꼴 크기로 상자에 글이 들어가는지 계산해 경고한다.
 
 import re
@@ -389,7 +390,7 @@ def build(folder: Path) -> Path:
     add_text(s, MARGIN + 0.35, 2.2, 5.15, 3.0, [
         ("구글·카카오 로그인은 구현했지만 실제 제공자로는 확인하지 못했어요", {"space_after": 10}),
         ("동시 접속은 10명까지만 확인했어요", {"space_after": 10}),
-        "단어 목록의 출처 확인이 남아 있어요",
+        "단어 목록의 공개 이용 확인이 남았어요",
     ], size=20, name="한계")
     add_box(s, 6.78, 1.45, 5.85, 3.9, fill=MINT, line=MINT_LINE, name="다음 단계 카드")
     add_text(s, 7.13, 1.6, 5.15, 0.5, "다음 단계", size=22, bold=True, color=ACCENT_DARK, name="다음 단계 제목")
@@ -433,7 +434,7 @@ def build(folder: Path) -> Path:
     set_background(s, BG)
     add_title(s, "부록 · 예상 질문")
     rows = [
-        ("단어 출처와 저작권은?", "프로젝트의 표본 목록이며 출처 확인 전이라 시판 단어장은 넣지 않았어요"),
+        ("단어 출처와 저작권은?", "교수님께 받은 수업 자료예요. 공개 전에 이용 범위를 확인해요"),
         ("초급·중급·고급 기준은?", "목록 순서 기준이에요. 실제 난이도순은 아니에요"),
         ("소셜 로그인은 되나요?", "구현과 가짜 제공자 테스트까지 했고, 실제 확인은 앱 등록 뒤예요"),
         ("보안은 어떻게 했나요?", "비밀번호 해시, 회원별 데이터 격리, 정답 비공개, 탈퇴 시 즉시 삭제예요"),
@@ -471,7 +472,7 @@ def build(folder: Path) -> Path:
             warnings.append(f"표 칸이 높아질 수 있음: {answer[:20]}")
     add_notes(s, "전체 질문과 답은 발표 구성안 문서 §6에 있다.")
 
-    target = folder / "smart-voca 발표 초안 v0.4.pptx"
+    target = folder / "smart-voca 발표 초안 v0.5.pptx"
     presentation.save(str(target))
     return target
 

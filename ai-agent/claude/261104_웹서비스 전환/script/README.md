@@ -21,7 +21,7 @@ QR 도구(`qrcode`, `Pillow`)는 프로젝트 개발용 패키지다 (`requireme
 |------|------|---------|
 | 1 | `.venv\Scripts\python "ai-agent/claude/261104_웹서비스 전환/script/capture_presentation_assets.py" "ai-agent/claude/261104_웹서비스 전환/발표/assets"` | 임시 DB에 예시 회원과 학습 기록을 만들고, 임시 서버와 헤드리스 브라우저로 PC·휴대폰 화면 17장을 찍고 시연 영상의 프레임을 모은다. 영상만 다시 찍으려면 끝에 `--video-only`. 개발 DB는 건드리지 않는다 |
 | 2 | `C:\도구\발표도구\Scripts\python "ai-agent/claude/261104_웹서비스 전환/script/make_video.py" "ai-agent/claude/261104_웹서비스 전환/발표/assets" 2.0` | 프레임을 mp4로 만든다. 끝의 숫자는 재생 빠르기(2.0이면 2배속, 약 32초) |
-| 3 | `C:\도구\발표도구\Scripts\python "ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py" "ai-agent/claude/261104_웹서비스 전환/발표"` | 캡처, 영상, QR 그림으로 `smart-voca 발표 초안 v0.4.pptx`를 만든다. 슬라이드 노트의 대본은 발표 구성안 문서에서 읽는다 |
+| 3 | `C:\도구\발표도구\Scripts\python "ai-agent/claude/261104_웹서비스 전환/script/build_presentation.py" "ai-agent/claude/261104_웹서비스 전환/발표"` | 캡처, 영상, QR 그림으로 `smart-voca 발표 초안 v0.5.pptx`를 만든다. 슬라이드 노트의 대본은 발표 구성안 문서에서 읽는다 |
 | 4 | `C:\도구\발표도구\Scripts\python "ai-agent/claude/261104_웹서비스 전환/script/preview_pptx.py" "발표/….pptx" 미리보기폴더` | PPT 안의 도형·글·그림을 같은 좌표로 다시 그려 슬라이드마다 PNG로 저장한다 (PowerPoint가 없는 PC에서 글 넘침과 배치를 대략 확인하는 용도) |
 
 ## 발표 당일 주소와 QR 바꾸기
