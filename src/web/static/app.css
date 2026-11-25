@@ -478,6 +478,16 @@ progress::-moz-progress-bar {
 th[aria-sort="ascending"] .sort-button::after { content: " \25B2"; }
 th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
 #word-table-area[aria-busy="true"] { opacity: 0.5; }
+/* 단어 직접 등록·CSV 가져오기 (VOCA-FR-001, 003) */
+.word-tools { margin: 12px 0 16px; padding: 12px 16px; background: var(--surface); border: 3px solid var(--accent-softer); border-radius: var(--radius); }
+.word-tools > summary { cursor: pointer; font-weight: 700; }
+.word-add-form, .word-import-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0 12px; margin-top: 12px; }
+.word-add-form .field, .word-import-form .field { flex: 1 1 200px; margin-bottom: 12px; }
+.word-add-form button, .word-import-form button { margin-bottom: 12px; }
+.word-import-form .help { flex-basis: 100%; margin-top: 0; }
+.word-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.word-actions button { padding: 4px 10px; font-size: 0.875rem; }
+.word-table input[type="text"] { width: 100%; padding: 6px 8px; font: inherit; border: 2px solid var(--accent-softer); border-radius: 8px; }
 .words-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0; }
 .pager { display: flex; align-items: center; gap: 12px; }
 

@@ -1,4 +1,4 @@
-{# 2026-11-05 - smart-voca - W-01 내 단어. 담은 단어장의 단어를 읽기만 한다 (결정 D-WB04). 파일 위치: src/web/templates/words.html #}
+{# 2026-11-05 - smart-voca - W-01 내 단어. 검색, 직접 등록·수정·삭제, CSV 가져오기 (VOCA-FR-001~004). 파일 위치: src/web/templates/words.html #}
 {% extends "member_base.html" %}
 {% block scripts %}<script src="/static/words.js" defer></script>{% endblock %}
 {% block member_content %}
@@ -10,6 +10,33 @@
   <a class="button-link" href="/wordbooks">단어장 고르기</a>
 </div>
 <p class="help" id="word-total" aria-live="polite"></p>
+
+<details class="word-tools" id="word-tools">
+  <summary>단어 직접 등록 · CSV 가져오기</summary>
+  <form id="word-add-form" class="word-add-form" novalidate>
+    <div class="field">
+      <label for="new-word">영단어</label>
+      <input id="new-word" name="word" type="text" maxlength="100" autocomplete="off" required>
+      <p class="field-error" id="word-error" hidden></p>
+    </div>
+    <div class="field">
+      <label for="new-meaning">뜻</label>
+      <input id="new-meaning" name="meaning" type="text" maxlength="500" autocomplete="off" placeholder="뜻이 여러 개면 / 로 나눕니다" required>
+      <p class="field-error" id="meaning-error" hidden></p>
+    </div>
+    <button type="submit" class="needs-verified">등록</button>
+  </form>
+  <form id="word-import-form" class="word-import-form" novalidate>
+    <div class="field">
+      <label for="import-file">CSV 파일 (영단어,뜻)</label>
+      <input id="import-file" name="file" type="file" accept=".csv,text/csv" required>
+      <p class="field-error" id="file-error" hidden></p>
+    </div>
+    <p class="help">첫 줄이 <code>영단어,뜻</code> 이면 제목으로 보고 건너뜁니다. 이미 있는 단어(대소문자 무시)와 파일 안에서 두 번째로 나온 단어는 건너뛰고, 기존 뜻은 바꾸지 않습니다.</p>
+    <button type="submit" class="needs-verified">가져오기</button>
+  </form>
+  <ul class="help" id="import-problems" hidden></ul>
+</details>
 
 <div id="word-empty" class="empty-state" hidden>
   <p id="word-empty-text"></p>
@@ -24,6 +51,7 @@
         <th scope="col" data-sort="word"><button type="button" class="sort-button">단어</button></th>
         <th scope="col" data-sort="meaning"><button type="button" class="sort-button">뜻</button></th>
         <th scope="col" data-sort="created"><button type="button" class="sort-button">등록일</button></th>
+        <th scope="col">관리</th>
       </tr>
     </thead>
     <tbody id="word-rows"></tbody>
