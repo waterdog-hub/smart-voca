@@ -98,6 +98,13 @@ def _is_valid_answer(item: TestAttemptItem, answer: int | str) -> bool:
     return isinstance(answer, str)
 
 
+# 출제 가중치 (VOCA-FR-022)
+NEVER_TESTED_WEIGHT = 3.0
+DAYS_PER_WEIGHT = 10
+MAX_AGE_BONUS = 3.0
+MAX_WRONG_BONUS = 5
+
+
 class TestService:
     def __init__(self, db: Session, user_id: int) -> None:
         self.db = db
@@ -122,8 +129,9 @@ class TestService:
             raise ApiError(422, "TEST_NOT_POSSIBLE", NO_WORDS_MESSAGE)
         word_ids = {word.word: word.id for word in words}
         core_words = [CoreWord(word.word, WordService.split_meanings(word.meaning)) for word in words]
+        weights = self._question_weights(words)
         try:
-            quiz = QuizBuilder().build_quiz(core_words, test_format, test_direction, count)
+            quiz = QuizBuilder().build_quiz(core_words, test_format, test_direction, count, weights)
         except ValueError as error:
             # 객관식 보기를 만들 단어가 부족할 때 core가 던진다 (구현 계획 §2.3)
             raise ApiError(422, "TEST_NOT_POSSIBLE", str(error)) from error
@@ -252,6 +260,29 @@ class TestService:
             self.db.rollback()
             raise ApiError(409, "TEST_ALREADY_SUBMITTED", ALREADY_SUBMITTED_MESSAGE) from error
         return SubmitResult(total=len(items), score=score, results=results)
+
+    def _question_weights(self, words: list) -> list[float]:
+        """시험 본 적 없는 단어, 오래전에 본 단어, 자주 틀린 단어가 더 많이 나오게 한다 (VOCA-FR-022).
+
+        - 시험 본 적 없음: 3
+        - 본 적 있음: 1 + 마지막으로 본 뒤 지난 날 수 / 10 (최대 +3)
+        - 틀린 횟수마다 +1 (최대 +5)
+        무작위 추출은 그대로이므로 가중치가 낮은 단어도 나올 수 있다.
+        """
+        last_tested = test_repository.last_tested_at_by_word(self.db, self.user_id)
+        wrong_counts = test_repository.wrong_count_by_word(self.db, self.user_id)
+        now = utc_now()
+        weights = []
+        for word in words:
+            tested_at = last_tested.get(word.id)
+            if tested_at is None:
+                weight = NEVER_TESTED_WEIGHT
+            else:
+                days = max((now - tested_at).days, 0)
+                weight = 1.0 + min(days / DAYS_PER_WEIGHT, MAX_AGE_BONUS)
+            weight += min(wrong_counts.get(word.id, 0), MAX_WRONG_BONUS)
+            weights.append(weight)
+        return weights
 
     def history(self, limit: int, offset: int) -> tuple[list[TestSession], int, int]:
         """(이번 쪽의 기록, 전체 시험 횟수, 전체 정답률)을 돌려준다."""

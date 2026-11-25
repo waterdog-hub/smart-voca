@@ -93,5 +93,29 @@ class QuizBuilderTest(unittest.TestCase):
         self.assertCountEqual(item.answers, ["a", "an"])
 
 
+
+class WeightedQuizTest(unittest.TestCase):
+    """가중치가 큰 단어가 더 자주 나온다 (웹 VOCA-FR-022)."""
+
+    def test_heavy_word_comes_more_often(self):
+        builder = QuizBuilder(random.Random(7))
+        words = make_words(10)
+        weights = [10.0] + [1.0] * 9
+        hits = sum(
+            any(item.word == "word00" for item in builder.build_quiz(words, "subjective", "en_ko", 3, weights))
+            for _ in range(500)
+        )
+        # 같은 확률이면 약 30%다. 가중치 10이면 훨씬 많이 나온다
+        self.assertGreater(hits, 350)
+
+    def test_weighted_pick_has_no_duplicates(self):
+        builder = QuizBuilder(random.Random(3))
+        items = builder.build_quiz(make_words(6), "multiple", "en_ko", 6, [5, 1, 1, 1, 1, 1])
+        self.assertEqual(len({item.word for item in items}), 6)
+
+    def test_weights_must_match_words(self):
+        with self.assertRaises(ValueError):
+            QuizBuilder().build_quiz(make_words(5), "subjective", "en_ko", 3, [1.0])
+
 if __name__ == "__main__":
     unittest.main()

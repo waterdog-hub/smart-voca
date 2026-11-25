@@ -20,17 +20,25 @@ class QuizBuilder:
     def __init__(self, rng: Optional[random.Random] = None):
         self._rng = rng or random.Random()
 
-    def build_quiz(self, words: List[Word], test_format: str, test_direction: str, count: int) -> List[QuizItem]:
+    def build_quiz(
+        self,
+        words: List[Word],
+        test_format: str,
+        test_direction: str,
+        count: int,
+        weights: Optional[List[float]] = None,
+    ) -> List[QuizItem]:
         """문항 목록을 만든다.
 
         test_format: multiple(객관식) / subjective(주관식)
         test_direction: en_ko / ko_en / both
         count는 단어 수보다 크면 단어 수만큼만 만든다.
+        weights를 주면 값이 큰 단어가 더 자주 뽑힌다 (웹 VOCA-FR-022). 없으면 모두 같은 확률이다.
         """
         if test_format == "multiple" and len(words) < CHOICE_COUNT:
             raise ValueError(f"객관식은 단어가 {CHOICE_COUNT}개 이상 필요합니다.")
 
-        selected_words = self._rng.sample(words, min(count, len(words)))
+        selected_words = self._pick_words(words, min(count, len(words)), weights)
         quiz_items: List[QuizItem] = []
         for word in selected_words:
             direction = self._choose_direction(test_direction)
@@ -39,6 +47,17 @@ class QuizBuilder:
             else:
                 quiz_items.append(self._build_subjective_item(word, words, direction))
         return quiz_items
+
+    def _pick_words(self, words: List[Word], count: int, weights: Optional[List[float]]) -> List[Word]:
+        if weights is None:
+            return self._rng.sample(words, count)
+        if len(weights) != len(words):
+            raise ValueError("weights는 words와 길이가 같아야 합니다.")
+        # 가중치 비복원 추출(Efraimidis-Spirakis): 단어마다 random^(1/가중치)를 뽑아 큰 순서로 고른다.
+        # 같은 단어가 두 번 나오지 않으면서 가중치가 큰 단어가 앞에 올 확률이 높다
+        keyed = [(self._rng.random() ** (1.0 / max(weight, 0.01)), index) for index, weight in enumerate(weights)]
+        keyed.sort(reverse=True)
+        return [words[index] for _, index in keyed[:count]]
 
     def _choose_direction(self, test_direction: str) -> str:
         """both이면 문항마다 방향을 무작위로 고른다."""
