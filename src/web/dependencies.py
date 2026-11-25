@@ -105,8 +105,8 @@ VerifiedWrite = Annotated[CurrentSession, Depends(require_verified_write)]
 
 
 def _uses_secure_cookie(settings: Settings) -> bool:
-    # 개발 서버는 http로 실행하므로 Secure를 붙이면 쿠키가 전송되지 않는다
-    return settings.is_public
+    # 개발 서버와 학교 서버는 http로 접속할 수 있어 Secure를 붙이면 쿠키가 전송되지 않는다
+    return settings.uses_secure_cookie
 
 
 def set_session_cookie(response: Response, session_token: str, settings: Settings) -> None:

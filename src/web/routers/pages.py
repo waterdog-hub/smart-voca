@@ -47,6 +47,7 @@ def _social_buttons(request: Request) -> list[dict[str, str]]:
 
 def _render(request: Request, template_name: str, **context: object) -> Response:
     context["demo_mode"] = request.app.state.settings.auto_verifies_email
+    context["school_mode"] = request.app.state.settings.is_school
     context["social_buttons"] = _social_buttons(request)
     # 알려진 코드만 문구로 바꾼다. 주소의 다른 값은 화면에 넣지 않는다
     context["social_error"] = SOCIAL_ERROR_MESSAGES.get(request.query_params.get("social_error", ""))

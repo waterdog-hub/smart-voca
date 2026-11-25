@@ -9,13 +9,16 @@
   <link rel="preload" href="/static/fonts/Jua.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/GowunDodum.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css">
+  {# 서버가 앱을 하위 주소로 옮기면 이 href도 바꿔 준다. auth.js가 이 값으로 앱 시작 주소를 안다 (R-04) #}
+  <link rel="home" href="/">
   <script src="/static/theme.js"></script>
   <script src="/static/auth.js" defer></script>
   {% block scripts %}{% endblock %}
 </head>
 <body>
   <header class="site-header"><a class="brand" href="/"><span class="brand-mark mascot" aria-hidden="true"></span><span class="brand-name">smart-voca</span></a></header>
-  {% if demo_mode %}<p class="demo-notice" id="demo-notice">시연용 서버입니다. 실제 비밀번호와 개인정보를 쓰지 마세요. 입력한 내용은 시연이 끝나면 지웁니다.</p>{% endif %}
+  {% if school_mode %}<p class="demo-notice" id="demo-notice">수업 과제용 서버입니다. 다른 곳에서 쓰는 비밀번호와 개인정보를 쓰지 마세요. 가입하면 메일 인증 없이 바로 쓸 수 있습니다.</p>
+  {% elif demo_mode %}<p class="demo-notice" id="demo-notice">시연용 서버입니다. 실제 비밀번호와 개인정보를 쓰지 마세요. 입력한 내용은 시연이 끝나면 지웁니다.</p>{% endif %}
   {% block body %}
   <main class="panel" data-page="{{ page }}">
     <h1>{{ title }}</h1>
