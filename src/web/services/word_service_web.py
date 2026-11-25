@@ -56,7 +56,7 @@ def _clean(word_text: str, meaning_text: str) -> tuple[str, str]:
     meaning_text = normalize_meaning(meaning_text.strip())
     problems = find_word_problems(word_text, meaning_text)
     if problems:
-        raise ApiError(422, "VALIDATION_FAILED", "입력값을 확인해 주세요.", fields=problems)
+        raise ApiError(400, "VALIDATION_FAILED", "입력값을 확인해 주세요.", fields=problems)
     return word_text, meaning_text
 
 
@@ -120,11 +120,11 @@ class WebWordService:
                 if reader.line_num == 1 and [c.strip().lower() for c in columns[:2]] in CSV_HEADERS:
                     continue  # 첫 줄 제목
                 if result.added + result.skipped_existing + result.skipped_duplicate + result.invalid_count >= MAX_IMPORT_ROWS:
-                    raise ApiError(422, "CSV_TOO_LARGE", f"한 번에 {MAX_IMPORT_ROWS:,}줄까지 가져올 수 있습니다.")
+                    raise ApiError(400, "CSV_TOO_LARGE", f"한 번에 {MAX_IMPORT_ROWS:,}줄까지 가져올 수 있습니다.")
                 self._import_row(result, columns, reader.line_num, seen_keys, active_keys, deleted_rows)
         except csv.Error:
             self.db.rollback()
-            raise ApiError(422, "CSV_INVALID", "CSV 형식이 올바르지 않습니다.") from None
+            raise ApiError(400, "CSV_INVALID", "CSV 형식이 올바르지 않습니다.") from None
         except ApiError:
             self.db.rollback()
             raise
@@ -165,13 +165,13 @@ class WebWordService:
     @staticmethod
     def _decode(raw: bytes) -> str:
         if not raw:
-            raise ApiError(422, "CSV_EMPTY", "빈 파일입니다.")
+            raise ApiError(400, "CSV_EMPTY", "빈 파일입니다.")
         if len(raw) > csv_guard.MAX_UPLOAD_BYTES:
             raise ApiError(413, "CSV_TOO_LARGE", "파일은 5MB 이하여야 합니다.")
         # 업로드 파일은 디스크에 쓰지 않고 메모리에서 처리한다 (서버는 /data, /tmp 외에는 쓸 수 없다)
         text = csv_guard.decode_upload(raw)
         if text is None:
-            raise ApiError(422, "CSV_ENCODING", "파일을 읽을 수 없습니다. UTF-8 또는 CP949 CSV 파일이어야 합니다.")
+            raise ApiError(400, "CSV_ENCODING", "파일을 읽을 수 없습니다. UTF-8 또는 CP949 CSV 파일이어야 합니다.")
         return text
 
     def _commit(self, label: str) -> None:
