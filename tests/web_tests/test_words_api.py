@@ -89,17 +89,17 @@ class ListWordsTest(WordsTestCase):
 
 
 class RemovedWriteApiTest(WordsTestCase):
-    """회원이 단어를 직접 바꾸는 API는 없다. 단어장 담기·제외만 남았다 (결정 D-WB04)."""
+    """일괄 삭제·내보내기·PATCH는 없다 (결정 D-WB04).
 
-    def test_member_cannot_add_edit_delete_import_or_export(self):
+    직접 등록(POST)·수정(PUT)·삭제(DELETE)·CSV 가져오기는 기말 과제 요건으로 다시 넣었다
+    (VOCA-FR-001~003, D-VOCA03). 그 동작은 test_voca_final.py 가 검사한다.
+    """
+
+    def test_member_cannot_bulk_delete_patch_or_export(self):
         headers = {"X-CSRF-Token": self.login().json()["csrf_token"]}
         responses = {
-            "POST /words": self.client.post(WORDS_API, json={"word": "a", "meaning": "b"}, headers=headers),
             "PATCH /words/1": self.client.patch(f"{WORDS_API}/1", json={"word": "a"}, headers=headers),
             "POST /words/delete": self.client.post(f"{WORDS_API}/delete", json={"ids": [1]}, headers=headers),
-            "POST /words/import": self.client.post(
-                f"{WORDS_API}/import", files={"file": ("w.csv", b"word,meaning\n")}, headers=headers
-            ),
             "GET /words/export": self.client.get(f"{WORDS_API}/export"),
         }
         for name, response in responses.items():

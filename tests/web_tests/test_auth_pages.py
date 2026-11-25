@@ -79,12 +79,13 @@ class AuthPagesTest(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["cache-control"], "no-store")
         html = response.text
+        # 직접 등록과 CSV 가져오기는 기말 과제 요건으로 다시 넣었다 (VOCA-FR-001, 003, D-VOCA03)
         for element in ('id="word-search"', 'id="word-rows"', 'id="word-empty-link"',
-                        'href="/wordbooks"', 'aria-current="page"'):
+                        'href="/wordbooks"', 'aria-current="page"', 'id="word-add-form"',
+                        'id="word-import-form"', 'id="import-file"'):
             self.assertIn(element, html)
-        # 직접 추가·수정·삭제·가져오기·내보내기 화면은 없다 (D-WB04)
-        for removed in ('id="add-form"', 'id="import-file"', 'id="edit-panel"', 'id="delete-selected"',
-                        "/api/v1/words/export"):
+        # 일괄 삭제와 내보내기는 여전히 없다 (D-WB04)
+        for removed in ('id="delete-selected"', "/api/v1/words/export"):
             self.assertNotIn(removed, html)
         self.assertIn('src="/static/words.js"', html)
         self.assertIn('data-email-verified="true"', html)

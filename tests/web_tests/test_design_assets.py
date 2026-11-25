@@ -21,7 +21,8 @@ def read_css() -> str:
 
 
 def css_static_urls() -> set[str]:
-    return set(re.findall(r'url\("(/static/[^"]+)"\)', read_css()))
+    # 학교 서버의 주소 바꾸기(url(/…))에 걸리도록 따옴표 없이 쓴다 (R-04). 따옴표가 남아 있으면 아래 테스트가 잡는다
+    return set(re.findall(r"url\((/static/[^)\"']+)\)", read_css()))
 
 
 class StaticAssetsTest(AuthTestCase):
@@ -32,6 +33,10 @@ class StaticAssetsTest(AuthTestCase):
             with self.subTest(url=url):
                 self.assertTrue((STATIC_DIR / url.removeprefix("/static/")).is_file())
                 self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_stylesheet_urls_have_no_quotes(self):
+        # url("/static/…")는 학교 서버가 하위 주소로 바꿔 주지 않아 그림과 글꼴이 깨진다 (R-04)
+        self.assertNotRegex(read_css(), r"url\([\"']/")
 
     def test_design_files_are_served_with_the_right_types(self):
         expected = {
@@ -62,7 +67,10 @@ class StaticAssetsTest(AuthTestCase):
                 self.assertLessEqual(max(width, height), MAX_CURSOR_SIZE)
 
     def test_cursor_hotspots_are_inside_the_image(self):
-        for hotspot in re.findall(r'cursor:\s*url\("[^"]+"\)\s+(\d+)\s+(\d+)', read_css()):
+        hotspots = re.findall(r"cursor:\s*url\([^)]+\)\s+(\d+)\s+(\d+)", read_css())
+        # 아무것도 못 찾고 통과하지 않도록 개수도 본다
+        self.assertGreaterEqual(len(hotspots), 3)
+        for hotspot in hotspots:
             self.assertTrue(all(0 <= int(value) < MAX_CURSOR_SIZE for value in hotspot))
 
 
