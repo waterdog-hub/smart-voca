@@ -321,3 +321,43 @@ class LoginAttempt(Base):
     action: Mapped[str] = mapped_column(String(30))
     # 30일이 지난 기록을 지울 때 쓴다
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now, index=True)
+
+
+class MemorizeLog(Base):
+    """암기 카드를 넘길 때마다 남기는 이력: 누가, 언제, 어느 단어를, 몇 일차에 (VOCA-FR-014).
+
+    study_records는 단어별 합계라 '언제 무엇을 했는지'가 남지 않아 따로 둔다 (결정 D-VOCA05).
+    """
+
+    __tablename__ = "memorize_logs"
+    __table_args__ = (allowed_values_check("action", ("done", "later"), "action_allowed"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = user_id_column(index=True)
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), index=True)
+    day: Mapped[int] = mapped_column(Integer)
+    # done: 외웠음, later: 다시 보기
+    action: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now)
+
+
+class TestResult(Base):
+    """시험 문항 하나의 채점 결과: 단어, 형식, 방향, 정오, 시각 (VOCA-FR-026).
+
+    통계(날짜별 정답률, 자주 틀린 단어)를 이 표에서 계산한다 (VOCA-FR-032~034).
+    """
+
+    __tablename__ = "test_results"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = user_id_column(index=True)
+    session_id: Mapped[int] = mapped_column(
+        ForeignKey("test_sessions.id", ondelete="CASCADE"), index=True
+    )
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), index=True)
+    test_format: Mapped[str] = mapped_column(String(20))
+    direction: Mapped[str] = mapped_column(String(10))
+    is_correct: Mapped[bool] = mapped_column(Boolean)
+    # 빈 칸으로 낸 문항은 틀린 것으로 채점하지만 오답 기록에는 넣지 않는다 (기존 규칙)
+    answered: Mapped[bool] = mapped_column(Boolean)
+    answered_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utc_now)

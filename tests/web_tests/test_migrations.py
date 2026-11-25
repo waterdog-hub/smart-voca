@@ -28,6 +28,8 @@ EXPECTED_TABLES = {
     "wordbooks",
     "wordbook_entries",
     "user_wordbooks",
+    "memorize_logs",
+    "test_results",
 }
 VERSION_TABLE = "alembic_version"
 

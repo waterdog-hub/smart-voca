@@ -8,7 +8,7 @@ from datetime import date
 from sqlalchemy import case, func, select, update
 from sqlalchemy.orm import Session
 
-from web.db.tables import PlanItem, StudyRecord, UserSetting, Word
+from web.db.tables import MemorizeLog, PlanItem, StudyRecord, UserSetting, Word
 
 
 def list_day_summaries(db: Session, user_id: int) -> list[tuple[int, int, int]]:
@@ -109,3 +109,7 @@ def count_memorized_words(db: Session, user_id: int) -> int:
             Word.deleted_at.is_(None),
         )
     )
+
+
+def add_memorize_log(db: Session, user_id: int, word_id: int, day: int, action: str) -> None:
+    db.add(MemorizeLog(user_id=user_id, word_id=word_id, day=day, action=action))

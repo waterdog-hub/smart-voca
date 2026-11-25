@@ -160,6 +160,8 @@ class PlanService:
             plan_repository.add_memorized(
                 self.db, self.user_id, item.word_id, current_day, today_in_korea()
             )
+            # 누가·언제·어느 단어·몇 일차를 한 줄씩 남긴다 (VOCA-FR-014)
+            plan_repository.add_memorize_log(self.db, self.user_id, item.word_id, current_day, "done")
         self.db.commit()
         self.db.refresh(item)
         return item, word
@@ -168,5 +170,6 @@ class PlanService:
         item, word, current_day = self._find_current_item(item_id)
         if not item.done:
             item.position = plan_repository.next_position(self.db, self.user_id, current_day)
+            plan_repository.add_memorize_log(self.db, self.user_id, item.word_id, current_day, "later")
             self.db.commit()
         return item, word

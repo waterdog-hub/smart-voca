@@ -16,7 +16,14 @@ from core.quiz_builder import QuizBuilder
 from core.word_service import WordService
 from models import QuizItem, Word as CoreWord
 from web.db.base import utc_now
-from web.db.tables import TEST_DIRECTIONS, TEST_FORMATS, TestAttempt, TestAttemptItem, TestSession
+from web.db.tables import (
+    TEST_DIRECTIONS,
+    TEST_FORMATS,
+    TestAttempt,
+    TestAttemptItem,
+    TestResult,
+    TestSession,
+)
 from web.errors import ApiError
 from web.repositories import test_repository, word_repository
 from web.services.plan_service import today_in_korea
@@ -196,11 +203,14 @@ class TestService:
         checker = AnswerChecker()
         today = today_in_korea()
         results = []
+        answered_ids = set()
         for item in items:
             answer = answers.get(item.id)
             # 빈 칸은 답하지 않은 것으로 본다
             if isinstance(answer, str) and not answer.strip():
                 answer = None
+            if answer is not None:
+                answered_ids.add(item.id)
             correct = answer is not None and checker.check_answer(_to_quiz_item(item), answer)
             # 풀지 않은 단어는 틀린 증거가 아니다. 일찍 제출해도 오답 기록이 부풀지 않게 한다
             if answer is not None and not correct:
@@ -209,18 +219,33 @@ class TestService:
                 QuestionResult(item, correct, _your_answer_text(item, answer), _correct_answer_text(item))
             )
         score = sum(1 for result in results if result.correct)
-        self.db.add(
-            TestSession(
-                user_id=self.user_id,
-                attempt_id=attempt.id,
-                taken_at=now,
-                test_format=attempt.test_format,
-                test_direction=attempt.test_direction,
-                total=len(items),
-                score=score,
-            )
+        session = TestSession(
+            user_id=self.user_id,
+            attempt_id=attempt.id,
+            taken_at=now,
+            test_format=attempt.test_format,
+            test_direction=attempt.test_direction,
+            total=len(items),
+            score=score,
         )
+        self.db.add(session)
         try:
+            # 문항별 결과가 회차를 가리키도록 회차의 id를 먼저 받는다
+            self.db.flush()
+            # 문항마다 단어, 형식, 방향, 정오, 시각을 남긴다 (VOCA-FR-026)
+            self.db.add_all(
+                TestResult(
+                    user_id=self.user_id,
+                    session_id=session.id,
+                    word_id=result.item.word_id,
+                    test_format=attempt.test_format,
+                    direction=result.item.direction,
+                    is_correct=result.correct,
+                    answered=result.item.id in answered_ids,
+                    answered_at=now,
+                )
+                for result in results
+            )
             self.db.commit()
         except IntegrityError as error:
             # attempt_id 유일 제약이 두 번째 방어선이다 (데이터 모델 §3.7)
