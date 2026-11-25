@@ -3,12 +3,11 @@
 
 "use strict";
 
-const ME_API = "/api/v1/me";
 const DELETE_WORD = "탈퇴";
 
 async function submitName(form) {
   if (!requireVerified()) return { ok: true };
-  const result = await writeJson(ME_API, "PATCH", { display_name: form.elements.display_name.value });
+  const result = await withCsrf((token) => fetch("/api/v1/me", jsonRequest("PATCH", { display_name: form.elements.display_name.value }, token)));
   if (result === null) return { ok: true };
   if (!result.ok) return result;
   showMessage("표시 이름을 저장했습니다.", "ok");
@@ -19,10 +18,10 @@ async function submitName(form) {
 async function submitPassword(form) {
   // 비밀번호가 없는 소셜 전용 계정은 현재 비밀번호 칸이 없다
   const currentField = form.elements.current_password;
-  const result = await writeJson(`${ME_API}/password`, "POST", {
+  const result = await withCsrf((token) => fetch("/api/v1/me/password", jsonRequest("POST", {
     current_password: currentField ? currentField.value : "",
     new_password: form.elements.new_password.value,
-  });
+  }, token)));
   if (result === null) return { ok: true };
   if (!result.ok) return result;
   form.reset();
@@ -42,9 +41,9 @@ async function submitDelete(form) {
     };
   }
   if (!window.confirm("정말 탈퇴할까요? 모든 학습 데이터가 삭제되며 되돌릴 수 없습니다.")) return { ok: true };
-  const result = await writeJson(`${ME_API}/delete`, "POST", { password: form.elements.password.value });
+  const result = await withCsrf((token) => fetch("/api/v1/me/delete", jsonRequest("POST", { password: form.elements.password.value }, token)));
   if (result === null) return { ok: true };
-  if (result.ok) window.location.assign("/login?withdrawn=1");
+  if (result.ok) window.location.href = "/login?withdrawn=1";
   // 서버는 비밀번호 확인 오류를 current_password 칸으로 알리지만, 이 폼의 칸 이름은 password다
   const fields = result.error?.fields;
   if (fields?.current_password) {
@@ -57,10 +56,10 @@ function setupLogoutAll() {
   const button = document.getElementById("logout-all-button");
   button.addEventListener("click", async () => {
     button.disabled = true;
-    const result = await callWithSession("/logout-all");
+    const result = await withCsrf((token) => fetch("/api/v1/auth/logout-all", jsonRequest("POST", undefined, token)));
     if (result === null) return;
     if (result.ok) {
-      window.location.assign("/login");
+      window.location.href = "/login";
       return;
     }
     button.disabled = false;
@@ -68,14 +67,12 @@ function setupLogoutAll() {
   });
 }
 
-const SOCIAL_API = "/api/v1/auth/social";
-
 async function linkProvider(button) {
   const passwordInput = document.getElementById("social_password");
   button.disabled = true;
-  const result = await writeJson(`${SOCIAL_API}/${button.dataset.provider}/link`, "POST", {
+  const result = await withCsrf((token) => fetch(`/api/v1/auth/social/${button.dataset.provider}/link`, jsonRequest("POST", {
     password: passwordInput ? passwordInput.value : "",
-  });
+  }, token)));
   if (result === null) return;
   if (!result.ok) {
     button.disabled = false;
@@ -91,14 +88,14 @@ async function unlinkProvider(button) {
   if (!requireVerified()) return;
   if (!window.confirm("이 소셜 계정의 연결을 해제할까요?")) return;
   button.disabled = true;
-  const result = await writeJson(`${SOCIAL_API}/${button.dataset.provider}`, "DELETE");
+  const result = await withCsrf((token) => fetch(`/api/v1/auth/social/${button.dataset.provider}`, jsonRequest("DELETE", undefined, token)));
   if (result === null) return;
   if (!result.ok) {
     button.disabled = false;
     showMessage(describeError(result.error), "error");
     return;
   }
-  window.location.assign("/account");
+  window.location.href = "/account";
 }
 
 function setupSocial() {

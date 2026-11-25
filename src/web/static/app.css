@@ -5,14 +5,14 @@
 /* ── 글꼴 (이슈 #21): 제목·버튼·숫자는 주아, 본문은 고운돋움. 둘 다 SIL OFL 1.1이며 fonts/README.md에 출처가 있다 ── */
 @font-face {
   font-family: "Jua";
-  src: url("/static/fonts/Jua.woff2") format("woff2");
+  src: url(/static/fonts/Jua.woff2) format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Gowun Dodum";
-  src: url("/static/fonts/GowunDodum.woff2") format("woff2");
+  src: url(/static/fonts/GowunDodum.woff2) format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -132,12 +132,12 @@ body {
 a { color: var(--accent-ink); }
 
 /* ── 고양이 발바닥 젤리 커서 (이슈 #21). 이미지를 못 읽으면 기본 커서로 보인다 ── */
-html { cursor: url("/static/cursor-paw.svg") 16 16, auto; }
+html { cursor: url(/static/cursor-paw.svg) 16 16, auto; }
 a, button, select, summary, label, .choice, [role="button"],
-input[type="checkbox"], input[type="radio"] { cursor: url("/static/cursor-paw-click.svg") 16 16, pointer; }
+input[type="checkbox"], input[type="radio"] { cursor: url(/static/cursor-paw-click.svg) 16 16, pointer; }
 input[type="text"], input[type="email"], input[type="password"],
 input[type="search"], input[type="number"], textarea { cursor: text; }
-button:disabled { cursor: url("/static/cursor-paw.svg") 16 16, default; }
+button:disabled { cursor: url(/static/cursor-paw.svg) 16 16, default; }
 
 /* ── 마스코트 "보카" ─────────────────────────────────────── */
 .mascot {
@@ -145,7 +145,7 @@ button:disabled { cursor: url("/static/cursor-paw.svg") 16 16, default; }
   flex: none;
   width: 40px;
   height: 40px;
-  background: url("/static/mascot.svg") center / contain no-repeat;
+  background: url(/static/mascot.svg) center / contain no-repeat;
 }
 @media (prefers-reduced-motion: no-preference) {
   .mascot-hero, .mascot-lg { animation: bob 3.2s ease-in-out infinite; }
@@ -324,7 +324,7 @@ button.danger { color: #fff; background: var(--error); border-color: #8f1d14; bo
 .member-nav a:hover { background: var(--accent-soft); }
 .member-nav a[aria-current="page"] { color: var(--accent-ink); font-weight: 800; background: var(--accent-soft); border-color: var(--accent-softer); }
 .nav-icon { flex: none; width: 26px; font-size: 1.25rem; line-height: 1; text-align: center; }
-.nav-icon[data-icon="books"] { height: 28px; background: url("/static/book-pink.svg") center / contain no-repeat; }
+.nav-icon[data-icon="books"] { height: 28px; background: url(/static/book-pink.svg) center / contain no-repeat; }
 .member-nav-user { margin-top: auto; padding: 12px 6px 0; color: var(--muted); font-size: 0.875rem; }
 .member-nav-user span { display: block; margin-bottom: 8px; overflow-wrap: anywhere; }
 .member-nav-user button { width: 100%; }
@@ -466,7 +466,7 @@ progress::-moz-progress-bar {
 .button-row button { width: auto; }
 .empty-state { padding: 20px 16px 32px; text-align: center; color: var(--muted); background: var(--surface); border: 3px dashed var(--accent-softer); border-radius: var(--radius); }
 /* 비었을 때는 보카가 기다린다 */
-.empty-state::before { content: ""; display: block; width: 72px; height: 72px; margin: 0 auto 6px; background: url("/static/mascot.svg") center / contain no-repeat; }
+.empty-state::before { content: ""; display: block; width: 72px; height: 72px; margin: 0 auto 6px; background: url(/static/mascot.svg) center / contain no-repeat; }
 
 /* ── 내 단어 (화면 설계 §4.3) ───────────────────────────── */
 .words-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
@@ -494,13 +494,13 @@ th[aria-sort="descending"] .sort-button::after { content: " \25BC"; }
   border-radius: var(--radius);
   box-shadow: 0 6px 0 var(--edge);
 }
-.wordbook-card::before { content: ""; width: 68px; height: 68px; margin: -4px 0 4px -4px; background: url("/static/book-pink.svg") center / contain no-repeat; }
+.wordbook-card::before { content: ""; width: 68px; height: 68px; margin: -4px 0 4px -4px; background: url(/static/book-pink.svg) center / contain no-repeat; }
 .wordbook-card:nth-child(4n+2) { --tint: var(--mint-soft); --edge: #b6e8cf; }
-.wordbook-card:nth-child(4n+2)::before { background-image: url("/static/book-mint.svg"); }
+.wordbook-card:nth-child(4n+2)::before { background-image: url(/static/book-mint.svg); }
 .wordbook-card:nth-child(4n+3) { --tint: var(--sky-soft); --edge: #bcdcfa; }
-.wordbook-card:nth-child(4n+3)::before { background-image: url("/static/book-sky.svg"); }
+.wordbook-card:nth-child(4n+3)::before { background-image: url(/static/book-sky.svg); }
 .wordbook-card:nth-child(4n+4) { --tint: var(--warm-soft); --edge: #ffdca3; }
-.wordbook-card:nth-child(4n+4)::before { background-image: url("/static/book-yellow.svg"); }
+.wordbook-card:nth-child(4n+4)::before { background-image: url(/static/book-yellow.svg); }
 .wordbook-card[data-added="true"] { border-color: var(--ok); box-shadow: 0 6px 0 var(--ok); }
 .wordbook-card h2 { margin: 0 0 8px; font-size: 1.1875rem; }
 .wordbook-card p { margin: 0 0 8px; }

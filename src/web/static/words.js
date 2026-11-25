@@ -4,7 +4,6 @@
 
 "use strict";
 
-const WORDS_API = "/api/v1/words";
 const PAGE_SIZE = 50;
 const SEARCH_DELAY_MS = 300;
 
@@ -38,7 +37,7 @@ async function loadWords() {
     offset: wordState.offset,
   });
   byId("word-table-area").setAttribute("aria-busy", "true");
-  const result = await requestJson(`${WORDS_API}?${query}`, { method: "GET" });
+  const result = await readJson(fetch(`/api/v1/words?${query}`, jsonRequest("GET")));
   if (requestNumber !== wordState.requestNumber) return;
   byId("word-table-area").setAttribute("aria-busy", "false");
   if (result.status === 401) {

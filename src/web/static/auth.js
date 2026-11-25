@@ -3,24 +3,34 @@
 
 "use strict";
 
-const API_BASE = "/api/v1/auth";
 const NETWORK_ERROR = { code: "NETWORK", message: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요." };
 const UNKNOWN_ERROR = { code: "UNKNOWN", message: "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." };
 const NOT_VERIFIED_MESSAGE = "이메일 인증이 필요합니다. 메일의 링크를 먼저 눌러 주세요.";
 
-async function requestJson(url, { method = "POST", body, formData, csrfToken } = {}) {
+// 학교 서버는 앱을 /2026/voca-<학번>/ 아래로 옮기면서 fetch("/…")와 location.href = "/…" 형태의 주소만 바꿔 준다.
+// 그래서 주소는 항상 호출하는 자리에 문자열로 쓴다. 이 파일의 함수는 주소를 받지 않고 요청 옵션만 만든다 (Dockerfile 구성 R-04)
+function jsonRequest(method, body, csrfToken) {
   const headers = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+  return {
+    method,
+    headers,
+    credentials: "same-origin",
+    body: body === undefined ? undefined : JSON.stringify(body),
+  };
+}
+
+function formRequest(formData, csrfToken) {
+  // 파일 업로드는 브라우저가 Content-Type과 경계 값을 직접 정한다
+  return { method: "POST", headers: { "X-CSRF-Token": csrfToken }, credentials: "same-origin", body: formData };
+}
+
+// fetch(...)가 돌려준 약속을 받아 결과를 한 모양으로 정리한다
+async function readJson(responsePromise) {
   let response;
   try {
-    response = await fetch(url, {
-      method,
-      headers,
-      credentials: "same-origin",
-      // 파일 업로드는 브라우저가 Content-Type과 경계 값을 직접 정한다
-      body: formData ?? (body === undefined ? undefined : JSON.stringify(body)),
-    });
+    response = await responsePromise;
   } catch {
     return { ok: false, status: 0, error: NETWORK_ERROR };
   }
@@ -29,48 +39,50 @@ async function requestJson(url, { method = "POST", body, formData, csrfToken } =
   return { ok: response.ok, status: response.status, data, error: data?.error ?? UNKNOWN_ERROR };
 }
 
-function callApi(path, options) {
-  return requestJson(`${API_BASE}${path}`, options);
+// 서버가 옮겨 준 앱의 시작 주소. base.html의 <link rel="home" href="/">를 서버가 바꿔 주므로 그 값을 읽는다
+function appRoot() {
+  const home = document.querySelector('link[rel="home"]');
+  const root = new URL(home ? home.href : "/", window.location.href).pathname;
+  return root.endsWith("/") ? root : `${root}/`;
+}
+
+// 브라우저 주소에서 앱 시작 주소를 뺀 앱 안의 경로 (예: /2026/voca-1/tests → /tests)
+function appPath() {
+  const root = appRoot();
+  const path = window.location.pathname;
+  return path.startsWith(root) ? `/${path.slice(root.length)}` : path;
 }
 
 // 세션이 끝나면 로그인 뒤 지금 화면으로 돌아오게 한다 (화면 설계 §5.3)
 function goToLogin() {
-  const here = window.location.pathname + window.location.search;
-  window.location.assign(`/login?${new URLSearchParams({ next: here })}`);
+  const next = new URLSearchParams({ next: appPath() + window.location.search });
+  window.location.href = "/login?" + next;
 }
 
 // 다른 사이트로 보내는 데 악용되지 않도록 같은 사이트 주소만 따른다. 주소 판별은 브라우저 파서에 맡긴다
+// next는 앱 안의 경로다. 이동할 때 앱 시작 주소를 앞에 붙인다
 function nextPathAfterLogin() {
   const next = new URLSearchParams(window.location.search).get("next");
-  if (!next) return "/";
+  const home = appRoot();
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return home;
   try {
     const target = new URL(next, window.location.origin);
-    return target.origin === window.location.origin ? target.pathname + target.search : "/";
+    if (target.origin !== window.location.origin) return home;
+    return home + (target.pathname + target.search).slice(1);
   } catch {
-    return "/";
+    return home;
   }
 }
 
-// 쿠키만으로 요청이 위조되지 않도록 쓰기 요청마다 세션의 CSRF 토큰을 함께 보낸다
-async function sendWithSession(url, options) {
-  const session = await callApi("/session", { method: "GET" });
+// 쿠키만으로 요청이 위조되지 않도록 쓰기 요청마다 세션의 CSRF 토큰을 함께 보낸다.
+// makeRequest는 토큰을 받아 fetch("/api/…", …)를 부르는 함수다
+async function withCsrf(makeRequest) {
+  const session = await readJson(fetch("/api/v1/auth/session", jsonRequest("GET")));
   if (!session.ok || !session.data?.user) {
     goToLogin();
     return null;
   }
-  return requestJson(url, { ...options, csrfToken: session.data.csrf_token });
-}
-
-function callWithSession(path) {
-  return sendWithSession(`${API_BASE}${path}`);
-}
-
-function writeJson(url, method, body) {
-  return sendWithSession(url, { method, body });
-}
-
-function writeForm(url, formData) {
-  return sendWithSession(url, { method: "POST", formData });
+  return readJson(makeRequest(session.data.csrf_token));
 }
 
 function isVerified() {
@@ -144,29 +156,28 @@ function setupForm(form, submit) {
 }
 
 async function submitLogin(form) {
-  const result = await callApi("/login", {
-    body: { email: form.elements.email.value, password: form.elements.password.value },
-  });
-  if (result.ok) window.location.assign(nextPathAfterLogin());
+  const result = await readJson(fetch("/api/v1/auth/login", jsonRequest("POST", {
+    email: form.elements.email.value,
+    password: form.elements.password.value,
+  })));
+  if (result.ok) window.location.href = nextPathAfterLogin();
   return result;
 }
 
 async function submitSignup(form) {
-  const result = await callApi("/signup", {
-    body: {
-      email: form.elements.email.value,
-      password: form.elements.password.value,
-      display_name: form.elements.display_name.value,
-      terms_agreed: form.elements.terms_agreed.checked,
-      privacy_agreed: form.elements.privacy_agreed.checked,
-    },
-  });
-  if (result.ok) window.location.assign("/signup/sent");
+  const result = await readJson(fetch("/api/v1/auth/signup", jsonRequest("POST", {
+    email: form.elements.email.value,
+    password: form.elements.password.value,
+    display_name: form.elements.display_name.value,
+    terms_agreed: form.elements.terms_agreed.checked,
+    privacy_agreed: form.elements.privacy_agreed.checked,
+  })));
+  if (result.ok) window.location.href = "/signup/sent";
   return result;
 }
 
 async function submitForgot(form) {
-  const result = await callApi("/password-reset/request", { body: { email: form.elements.email.value } });
+  const result = await readJson(fetch("/api/v1/auth/password-reset/request", jsonRequest("POST", { email: form.elements.email.value })));
   if (result.ok) showMessage(result.data.message, "ok");
   return result;
 }
@@ -196,18 +207,18 @@ async function submitReset(form) {
   if (!resetToken) {
     return { ok: false, error: { code: "TOKEN_INVALID", message: "재설정 링크가 올바르지 않습니다. 메일의 링크를 다시 눌러 주세요." } };
   }
-  const result = await callApi("/password-reset/confirm", { body: { token: resetToken, new_password: newPassword } });
+  const result = await readJson(fetch("/api/v1/auth/password-reset/confirm", jsonRequest("POST", { token: resetToken, new_password: newPassword })));
   if (result.ok) {
     resetToken = null;
     form.reset();
     showMessage(`${result.data.message}`, "ok");
-    window.setTimeout(() => window.location.assign("/login"), 1500);
+    window.setTimeout(() => { window.location.href = "/login"; }, 1500);
   }
   return result;
 }
 
 async function submitSocialComplete(form) {
-  const result = await callApi("/social/complete", { body: { email: form.elements.email.value } });
+  const result = await readJson(fetch("/api/v1/auth/social/complete", jsonRequest("POST", { email: form.elements.email.value })));
   if (result.ok) showMessage(result.data.message, "ok");
   return result;
 }
@@ -215,14 +226,14 @@ async function submitSocialComplete(form) {
 async function verifyEmailFromLink() {
   const status = document.getElementById("verify-status");
   status.textContent = "인증을 확인하는 중입니다.";
-  const token =new URLSearchParams(window.location.hash.slice(1)).get("token");
+  const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
   // 토큰이 방문 기록과 화면 공유에 남지 않도록 주소에서 지운다
   window.history.replaceState(null, "", window.location.pathname);
   if (!token) {
     status.textContent = "인증 링크가 올바르지 않습니다. 메일의 링크를 다시 눌러 주세요.";
     return;
   }
-  const result = await callApi("/verify-email", { body: { token } });
+  const result = await readJson(fetch("/api/v1/auth/verify-email", jsonRequest("POST", { token })));
   status.textContent = result.ok
     ? result.data.message
     : `${result.error.message} 로그인한 뒤 인증 메일을 다시 받을 수 있습니다.`;
@@ -232,10 +243,10 @@ function setupHome() {
   const logoutButton = document.getElementById("logout-button");
   logoutButton.addEventListener("click", async () => {
     logoutButton.disabled = true;
-    const result = await callWithSession("/logout");
+    const result = await withCsrf((token) => fetch("/api/v1/auth/logout", jsonRequest("POST", undefined, token)));
     if (result === null) return;
     if (result.ok) {
-      window.location.assign("/login");
+      window.location.href = "/login";
       return;
     }
     logoutButton.disabled = false;
@@ -246,7 +257,7 @@ function setupHome() {
   if (!resendButton) return;
   resendButton.addEventListener("click", async () => {
     resendButton.disabled = true;
-    const result = await callWithSession("/resend-verification");
+    const result = await withCsrf((token) => fetch("/api/v1/auth/resend-verification", jsonRequest("POST", undefined, token)));
     if (result === null) return;
     resendButton.disabled = false;
     if (result.ok) showMessage(result.data.message, "ok");

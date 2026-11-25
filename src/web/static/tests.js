@@ -43,13 +43,13 @@ async function submitStart() {
     return { ok: false, error: { message: "입력값을 확인해 주세요.", fields: { count: problem } } };
   }
   if (startForm.dataset.hasOpen === "true" && !window.confirm(REPLACE_CONFIRM)) return { ok: true };
-  const result = await writeJson("/api/v1/tests", "POST", {
+  const result = await withCsrf((token) => fetch("/api/v1/tests", jsonRequest("POST", {
     test_format: formatSelect.value,
     test_direction: startForm.elements.test_direction.value,
     count: Number(countInput.value),
-  });
+  }, token)));
   if (result === null) return { ok: true };
-  if (result.ok) window.location.assign(`/tests/${result.data.id}`);
+  if (result.ok) window.location.href = "/tests/" + result.data.id;
   return result;
 }
 

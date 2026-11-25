@@ -5,7 +5,6 @@
 "use strict";
 
 const attemptId = document.getElementById("test-app").dataset.attemptId;
-const TEST_URL = `/api/v1/tests/${attemptId}`;
 const DRAFT_KEY = `smart-voca-test-${attemptId}`;
 const PROMPTS = {
   en_ko: "다음 영어 단어의 뜻은?",
@@ -176,7 +175,7 @@ async function submitTest() {
 
   testState.submitting = true;
   byTestId("next-question").disabled = true;
-  const result = await writeJson(`${TEST_URL}/submit`, "POST", { answers: buildAnswerList() });
+  const result = await withCsrf((token) => fetch(`/api/v1/tests/${attemptId}/submit`, jsonRequest("POST", { answers: buildAnswerList() }, token)));
   if (result === null) return;
   testState.submitting = false;
   byTestId("next-question").disabled = false;
@@ -214,7 +213,7 @@ function handleTestKey(event) {
 }
 
 async function startTestPage() {
-  const result = await requestJson(TEST_URL, { method: "GET" });
+  const result = await readJson(fetch(`/api/v1/tests/${attemptId}`, jsonRequest("GET")));
   if (result.status === 401) {
     goToLogin();
     return;

@@ -10,10 +10,10 @@ function setupCreatePlanButtons() {
     button.addEventListener("click", async () => {
       if (!requireVerified()) return;
       button.disabled = true;
-      const result = await writeJson("/api/v1/plans", "POST");
+      const result = await withCsrf((token) => fetch("/api/v1/plans", jsonRequest("POST", undefined, token)));
       if (result === null) return;
       if (result.ok) {
-        window.location.assign("/memorize");
+        window.location.href = "/memorize";
         return;
       }
       button.disabled = false;

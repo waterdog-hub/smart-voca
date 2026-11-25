@@ -4,8 +4,6 @@
 
 "use strict";
 
-const WORDBOOKS_API = "/api/v1/wordbooks";
-
 function byId(id) {
   return document.getElementById(id);
 }
@@ -51,7 +49,7 @@ function makeWordbookCard(book) {
 
 async function loadWordbooks() {
   byId("wordbook-list").setAttribute("aria-busy", "true");
-  const result = await requestJson(WORDBOOKS_API, { method: "GET" });
+  const result = await readJson(fetch("/api/v1/wordbooks", jsonRequest("GET")));
   byId("wordbook-list").setAttribute("aria-busy", "false");
   if (result.status === 401) {
     goToLogin();
@@ -71,7 +69,7 @@ async function loadWordbooks() {
 async function addWordbook(book, button) {
   if (!requireVerified()) return;
   button.disabled = true;
-  const result = await writeJson(`${WORDBOOKS_API}/${book.id}/add`, "POST");
+  const result = await withCsrf((token) => fetch(`/api/v1/wordbooks/${book.id}/add`, jsonRequest("POST", undefined, token)));
   if (result === null) return;
   if (!result.ok) {
     button.disabled = false;
@@ -91,7 +89,7 @@ async function removeWordbook(book, button) {
     "다른 담은 단어장에 없는 단어는 학습과 진도에서 빠집니다. 학습 기록은 남고, 다시 담으면 이어집니다.";
   if (!window.confirm(question)) return;
   button.disabled = true;
-  const result = await writeJson(`${WORDBOOKS_API}/${book.id}/remove`, "POST");
+  const result = await withCsrf((token) => fetch(`/api/v1/wordbooks/${book.id}/remove`, jsonRequest("POST", undefined, token)));
   if (result === null) return;
   if (!result.ok) {
     button.disabled = false;

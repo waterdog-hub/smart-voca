@@ -4,7 +4,6 @@
 
 "use strict";
 
-const SETTINGS_API = "/api/v1/settings";
 const SETTINGS_SAVED_MESSAGE = "설정을 저장했습니다. 하루 분량은 다음 일차 진도부터 적용됩니다.";
 const SETTINGS_INVALID_MESSAGE = "입력값을 확인해 주세요.";
 
@@ -62,7 +61,7 @@ async function submitSettings() {
   if (Object.keys(problems).length > 0) {
     return { ok: false, error: { message: SETTINGS_INVALID_MESSAGE, fields: problems } };
   }
-  const result = await writeJson(SETTINGS_API, "PUT", readSettings());
+  const result = await withCsrf((token) => fetch("/api/v1/settings", jsonRequest("PUT", readSettings(), token)));
   // 세션이 끝나 로그인 화면으로 이동하는 중이다
   if (result === null) return { ok: true };
   if (result.ok) {
@@ -85,7 +84,7 @@ async function startSettingsPage() {
   // 비활성처럼 보이되 눌렀을 때 인증 안내를 띄운다 (화면 설계 §4.1)
   if (!isVerified()) saveButton.setAttribute("aria-disabled", "true");
 
-  const result = await requestJson(SETTINGS_API, { method: "GET" });
+  const result = await readJson(fetch("/api/v1/settings", jsonRequest("GET")));
   if (result.status === 401) {
     goToLogin();
     return;

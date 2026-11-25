@@ -77,7 +77,7 @@ function revealMeaning() {
 async function saveCard(card, body) {
   if (!cardState.isCurrent) return true;
   if (!requireVerified()) return false;
-  const result = await writeJson(`/api/v1/plan-items/${card.id}`, "PATCH", body);
+  const result = await withCsrf((token) => fetch(`/api/v1/plan-items/${card.id}`, jsonRequest("PATCH", body, token)));
   if (result === null) return false;
   if (result.status === 404 || result.status === 409) {
     // 다른 탭에서 단어를 지웠거나 다음 일차로 넘어갔다. 최신 상태로 다시 그린다
@@ -144,7 +144,7 @@ async function startMemorizePage() {
   element("again-button").addEventListener("click", repeatCardLater);
   document.addEventListener("keydown", handleCardKey);
 
-  const result = await requestJson(`/api/v1/plans/${memorizeApp.dataset.day}`, { method: "GET" });
+  const result = await readJson(fetch(`/api/v1/plans/${memorizeApp.dataset.day}`, jsonRequest("GET")));
   if (result.status === 401) {
     goToLogin();
     return;
