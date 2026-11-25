@@ -1,0 +1,65 @@
+{# 2026-11-25 - smart-voca - 학습 진척 통계: 진도, 회차별·날짜별 정답률, 자주 틀린 단어 (VOCA-FR-031~034). 파일 위치: src/web/templates/stats.html #}
+{% extends "member_base.html" %}
+{% block member_content %}
+{% set progress = stats.progress %}
+<div class="stat-grid">
+  <section class="stat-tile" aria-labelledby="stats-day-title">
+    <h2 id="stats-day-title"><span aria-hidden="true">🔥</span> 현재 일차</h2>
+    <p class="stat-number">{% if progress.current_day %}{{ progress.current_day }}<span class="stat-unit">일차</span>{% else %}-{% endif %}</p>
+  </section>
+  <section class="stat-tile" aria-labelledby="stats-memorized-title">
+    <h2 id="stats-memorized-title"><span aria-hidden="true">🌱</span> 암기한 단어</h2>
+    <p class="stat-number" id="stats-memorized">{{ progress.memorized_words }}<span class="stat-unit">/ {{ progress.total_words }}</span></p>
+    <progress max="{{ [progress.total_words, 1] | max }}" value="{{ progress.memorized_words }}" aria-labelledby="stats-memorized-title"></progress>
+  </section>
+  <section class="stat-tile" aria-labelledby="stats-test-title">
+    <h2 id="stats-test-title"><span aria-hidden="true">🎯</span> 전체 정답률</h2>
+    <p class="stat-number" id="stats-overall">{% if stats.test_count %}{{ stats.overall_percent }}<span class="stat-unit">% · {{ stats.test_count }}회</span>{% else %}-{% endif %}</p>
+  </section>
+</div>
+
+<section class="stats-section" aria-labelledby="stats-sessions-title">
+  <h2 id="stats-sessions-title">회차별 정답률</h2>
+  {% if stats.sessions %}
+  <ol class="bar-chart" id="stats-sessions">
+    {% for point in stats.sessions %}
+    <li><span class="bar-label">{{ point.number }}회 <small>{{ point.taken_at }}</small></span><span class="bar-track"><span class="bar-fill" style="width: {{ point.percent }}%"></span></span><span class="bar-value">{{ point.percent }}% ({{ point.score }}/{{ point.total }})</span></li>
+    {% endfor %}
+  </ol>
+  <p class="help">최근 {{ stats.sessions | length }}회를 보여 줍니다.</p>
+  {% else %}
+  <p class="help" id="stats-no-tests">아직 시험 기록이 없습니다. <a href="/tests">시험 보러 가기</a></p>
+  {% endif %}
+</section>
+
+<section class="stats-section" aria-labelledby="stats-days-title">
+  <h2 id="stats-days-title">날짜별 정답률</h2>
+  {% if stats.days %}
+  <ol class="bar-chart" id="stats-days">
+    {% for day in stats.days %}
+    <li><span class="bar-label">{{ day.date }} <small>{{ day.tests }}회</small></span><span class="bar-track"><span class="bar-fill" style="width: {{ day.percent }}%"></span></span><span class="bar-value">{{ day.percent }}% ({{ day.score }}/{{ day.total }})</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="help">시험을 보면 날짜별로 모입니다.</p>
+  {% endif %}
+</section>
+
+<section class="stats-section" aria-labelledby="stats-wrong-title">
+  <h2 id="stats-wrong-title">자주 틀리는 단어 (상위 {{ stats.wrong_words | length if stats.wrong_words else 10 }}개)</h2>
+  {% if stats.wrong_words %}
+  <div class="table-scroll">
+    <table class="plan-table" id="stats-wrong-table">
+      <thead><tr><th scope="col">순위</th><th scope="col">단어</th><th scope="col">뜻</th><th scope="col">틀린 횟수</th><th scope="col">출제 횟수</th></tr></thead>
+      <tbody>
+        {% for item in stats.wrong_words %}
+        <tr><td data-label="순위">{{ loop.index }}</td><td data-label="단어">{{ item.word }}</td><td data-label="뜻">{{ item.meaning }}</td><td data-label="틀린 횟수">{{ item.wrong }}</td><td data-label="출제 횟수">{{ item.asked }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="help">아직 틀린 단어가 없습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}

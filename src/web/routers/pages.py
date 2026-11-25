@@ -17,6 +17,7 @@ from web.schemas.common import MAX_DB_INT
 from web.services.plan_service import KOREA_TIME, PlanService
 from web.services.social_providers import PROVIDER_LABELS, PROVIDER_NAMES
 from web.services.setting_service import COUNT_FIELDS, DIRECTION_CHOICES, FORMAT_CHOICES
+from web.services.stats_service import StatsService
 from web.services.test_service import (
     DEFAULT_QUESTION_COUNT,
     MAX_QUESTION_COUNT,
@@ -234,6 +235,16 @@ def test_history_page(request: Request, current: OptionalSession, db: DbSession)
         overall_percent=overall,
         previous_page=page - 1 if page > 1 else None,
         next_page=page + 1 if page * HISTORY_PAGE_SIZE < count else None,
+    )
+
+
+@router.get("/stats")
+def stats_page(request: Request, current: OptionalSession, db: DbSession) -> Response:
+    # 진도, 시험 성적 추이, 자주 틀린 단어 (VOCA-FR-031~034). 읽기 전용이라 서버가 그린다
+    if current is None:
+        return _login_redirect(request)
+    return _render_member_page(
+        request, current, "stats.html", "학습 통계", "stats", stats=StatsService(db, current.user.id).build()
     )
 
 

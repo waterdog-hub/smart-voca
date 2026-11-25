@@ -15,6 +15,7 @@
       <div class="nav-secondary">
         <a href="/words" {% if page == "words" %}aria-current="page"{% endif %}>{{ icon("list") }}<span>내 단어</span></a>
         <a href="/tests/history" {% if page == "test-history" %}aria-current="page"{% endif %}>{{ icon("clock") }}<span>시험 기록</span></a>
+        <a href="/stats" {% if page == "stats" %}aria-current="page"{% endif %}>{{ icon("check") }}<span>학습 통계</span></a>
         <a href="/settings" {% if page == "settings" %}aria-current="page"{% endif %}>{{ icon("sliders") }}<span>설정</span></a>
         <a href="/account" {% if page == "account" %}aria-current="page"{% endif %}>{{ icon("user") }}<span>내 계정</span></a>
       </div>
