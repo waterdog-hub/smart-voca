@@ -6,6 +6,7 @@
 - **한 줄 설명**: 영어 단어 암기와 시험을 돕는 학습 서비스 (진도 관리, 객관식·주관식 시험, 오답 복습). Windows 데스크톱 앱을 완료하고 회원제 웹 서비스로 전환 중
 - **작성자**: `260322 은형주`
 - **리포지토리**: `https://github.com/waterdog-hub/smart-voca`
+- **기말 과제 (2026-11-25~)**: AI기반 프로그래밍 기말 과제 「단어장 웹 앱」으로 제출한다. 요구사항 ID는 과제 문서의 `VOCA-FR-xxx`·`VOCA-NFR-xxx`·`VOCA-SUB-xxx`를 쓰고, 대응표는 `ai-agent/claude/261125_기말과제 배포/`에 있다. 학교 서버 주소는 `/2026/voca-<학번>/`. 1차 제출 11-30 23:59, 최종 12-11 23:59. 제출 커밋은 점검 워크플로가 초록인 커밋이어야 한다
 - **상태**: 데스크톱 앱 구현 완료 (2026-10-28 기준). 웹 서비스 전환 구현 중 (M8, M7, MW, MD 구현 완료, 2026-11-05. 소셜 로그인은 실제 제공자 확인 전. M10은 상용화 단계로 미룸(이슈 #20). 지금은 발표 준비 단계). 제출은 프로그램 시연과 PPT 발표. 발표는 2026-11-13(금) 5분 내외, 청중은 교수님과 동기들
 
 ### 기술 스택
@@ -16,7 +17,7 @@
 | 주요 라이브러리 | 웹: FastAPI, SQLAlchemy, Alembic, pydantic, argon2-cffi, uvicorn 등 (`requirements.txt`). 데스크톱 앱은 표준 라이브러리만 사용 |
 | 프론트엔드 | 웹: Jinja2 + 필요한 부분만 자바스크립트. 데스크톱: tkinter |
 | DB | 웹: 개발 SQLite, 운영 PostgreSQL. 데스크톱: 없음 (CSV 파일로 저장) |
-| 실행 환경 | 개발: 로컬 Windows (호스트 직접 실행, `.venv`). 운영: 관리형 플랫폼에 컨테이너 배포 (M10) |
+| 실행 환경 | 개발: 로컬 Windows (호스트 직접 실행, `.venv`). 과제 제출: 학교 서버에 컨테이너 배포 (`Dockerfile`, `python:3.13-slim`, `APP_ENV=school`, SQLite `/data/voca.db`) |
 
 ## 상위 정책 참조
 
@@ -105,6 +106,10 @@ smart-voca/
 - 브라우저 점검 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/browser_check.py`. 임시 DB를 쓰며, 화면을 바꾼 마일스톤마다 실행한다. `--keep`을 붙이면 스크린샷이 남는다.
 - 시연 서버 (프로젝트 루트에서): `.venv\Scripts\python ai-agent/scripts/demo_server.py start`, 시연 DB 삭제는 `reset`. 발표자 시연 계정 준비는 `demo_prepare.py 시연주소` (초급 단어장 담기와 1일차까지). 개발 PC를 인터넷에 여는 일이라 사용자 승인 후 실행한다. 절차는 `docs/web/`의 시연 절차 문서에 있다.
 - 데스크톱 앱 실행: `py -3 src/main.py` (별도 빌드 없음)
+- **학교 서버 배포 (기말 과제)**: 리포 루트 `Dockerfile`로 빌드한다. 「Dockerfile 구성」 R-01~R-16을 지킨다. 점검은 `.github/workflows/docker-check.yml`(학교 배포 원본, **절대 고치지 않는다**)이 push마다 돈다. Actions 결과는 `https://github.com/waterdog-hub/smart-voca/actions`에서 본다
+  - `APP_ENV=school`: 가입 즉시 인증, 쿠키 Secure 생략, 시작할 때 `alembic upgrade head`와 공용 단어장 적재(`web/db/bootstrap.py`). 키는 `SECRET_KEY`로 만들고 없으면 `/data/.secret_key`에 무작위로 만든다
+  - DB는 `DATABASE_URL`이 없으면 `DB_PATH`로 SQLite 주소를 만든다
+  - **주소 규칙 (R-04)**: JS는 `fetch("/api/…", jsonRequest(…))`처럼 호출 자리에 문자열로 쓴다. 주소를 상수·변수로 빼지 않는다. 쓰기는 `withCsrf((token) => fetch("/api/…", jsonRequest("POST", body, token)))`. 이동은 `window.location.href = "/…"`. CSS는 `url(/static/…)`(따옴표 없이). HTML 속성은 따옴표로 감싼다
 - 개발은 호스트에서 직접 실행한다. 운영 배포만 컨테이너를 쓴다 (배포·운영 설계 D-OP02, M10).
 - 데이터 파일은 `data/`에 생성되며, 실행 중 학습 기록이 바뀐다. 테스트는 임시 폴더를 쓴다.
 
@@ -300,5 +305,5 @@ smart-voca/
 - **개발용 메일**: 개발 환경은 메일을 보내지 않고 서버 콘솔에 인증 링크를 출력한다. 운영은 발송 업체를 정해 구현할 때까지(M10) 발송이 실패 처리된다. 시연 환경은 메일을 보내지 않아 비밀번호 재설정을 쓸 수 없다 (이슈 #18).
 - **디자인**: 귀여운 학습 앱 스타일이다 (이슈 #21, 화면 설계 §4.7). 색은 `src/web/static/app.css` 맨 위의 테마 변수, 마스코트·아이콘·커서는 `static/*.svg`, 글꼴(주아, 고운돋움)은 `static/fonts/`에 저작권·라이선스(SIL OFL)와 함께 있다. 글꼴을 다시 만들려면 `ai-agent/scripts/make_fonts.py`를 쓴다(개발용 `fonttools`, `brotli`). 화면을 바꾸면 `browser_check.py`와 스크린샷으로 확인하고, 메뉴 링크는 `<a href aria-current>` 형태를 유지한다 (기존 테스트가 이 형태를 본다).
 - **소셜 로그인**: 구글·카카오 키(`GOOGLE_CLIENT_ID/SECRET`, `KAKAO_REST_API_KEY/CLIENT_SECRET`)가 `.env`에 있는 제공자만 켜지고 시연 환경에서는 꺼진다. 코드는 가짜 제공자와 모의 전송으로만 확인했다. 앱 등록 절차는 `docs/web/운영_261105_소셜 로그인 앱 등록 안내 v0.2.md` (이슈 #19). 키 값은 채팅·이슈·커밋에 붙여 넣지 않는다.
-- **공용 단어장**: 회원은 단어를 직접 추가·수정·삭제하지 않고 운영자가 넣은 단어장을 담고 제외한다 (이슈 #17, 검토 문서 `검토_261105_MW 공용 단어장 결정.md`). 단어장은 `data/wordbooks.json`에 적고 `load_wordbooks.py`로 DB에 넣는다. 담기는 회원의 `words`로 복사하므로 단어장을 고쳐도 이미 담은 단어는 바뀌지 않는다. 웹 테스트에서 단어가 필요하면 `AuthTestCase.insert_words`와 `insert_wordbook`을 쓴다.
+- **공용 단어장**: 운영자가 넣은 단어장을 담고 제외한다 (이슈 #17, 검토 문서 `검토_261105_MW 공용 단어장 결정.md`). 기말 과제 요건(VOCA-FR-001~003)으로 2026-11-25부터 회원이 단어를 직접 등록·수정·삭제하고 CSV(`영단어,뜻`)를 가져올 수도 있다 (`/api/v1/words`, 결정 D-VOCA03). CSV는 기존 단어와 파일 안 중복을 건너뛰고 기존 뜻은 바꾸지 않는다. 단어장은 `data/wordbooks.json`에 적고 `load_wordbooks.py`로 DB에 넣는다. 담기는 회원의 `words`로 복사하므로 단어장을 고쳐도 이미 담은 단어는 바뀌지 않는다. 웹 테스트에서 단어가 필요하면 `AuthTestCase.insert_words`와 `insert_wordbook`을 쓴다.
 - **새 쓰기 API**: 회원 데이터를 바꾸는 API에는 `web.dependencies.VerifiedWrite`를 붙인다. 로그인, CSRF, 이메일 인증을 함께 검사한다.
