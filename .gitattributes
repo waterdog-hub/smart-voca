@@ -1,0 +1,7 @@
+# Windows에서 커밋해도 저장소에는 LF로 저장한다 (R-12)
+* text=auto eol=lf
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.pptx binary
+*.mp4 binary

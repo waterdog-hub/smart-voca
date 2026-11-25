@@ -1,0 +1,17 @@
+# 이미지에 넣지 않을 파일 (R-11)
+.git
+.github
+.venv
+venv
+node_modules
+__pycache__
+*.pyc
+*.db
+*.sqlite3
+.env
+.vscode
+.idea
+ai-agent
+docs
+tests
+data/backup
