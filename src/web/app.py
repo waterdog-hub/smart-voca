@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from web.db.base import check_database, make_engine, make_session_factory
+from web.db.bootstrap import prepare_database
 from web.errors import register_error_handlers
 from web.routers import (
     auth_api,
@@ -35,6 +36,9 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # DB에 연결할 수 없으면 요청을 받기 전에 시작을 멈춘다 (배포·운영 설계 §3.2)
     check_database(app.state.engine)
+    if app.state.settings.is_school:
+        # 학교 서버는 빈 /data 에서 시작한다. 테이블과 공용 단어장을 스스로 준비한다 (VOCA-NFR-003)
+        prepare_database(app.state.settings.database_url, app.state.engine)
     yield
     app.state.engine.dispose()
 
